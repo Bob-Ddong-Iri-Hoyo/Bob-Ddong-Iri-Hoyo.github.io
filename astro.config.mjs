@@ -2,9 +2,16 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
+const [githubOwner = 'Bob-Ddong-Iri-Hoyo', githubRepo = 'Bob-Ddong-Iri-Hoyo.github.io'] =
+	process.env.GITHUB_REPOSITORY?.split('/') ?? [];
+const isRootPagesRepo = githubRepo.toLowerCase() === `${githubOwner.toLowerCase()}.github.io`;
+const base = isRootPagesRepo ? '' : `/${githubRepo}`;
+const site = `https://${githubOwner.toLowerCase()}.github.io`;
+
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://bob-ddong-iri-hoyo.github.io',
+	site,
+	base,
 	integrations: [
 		starlight({
 			title: {
@@ -22,7 +29,10 @@ export default defineConfig({
 					lang: 'en',
 				},
 			},
-			head: [{ tag: 'script', attrs: { src: '/scripts/locale-router.js', defer: true } }],
+			head: [
+				{ tag: 'meta', attrs: { name: 'bdih-base-path', content: base } },
+				{ tag: 'script', attrs: { src: `${base}/scripts/locale-router.js`, defer: true } },
+			],
 			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher' }],
 			sidebar: [
 				{

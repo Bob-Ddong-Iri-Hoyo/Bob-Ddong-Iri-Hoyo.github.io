@@ -7,15 +7,28 @@
 		return 'ko';
 	};
 
+	const stripBasePath = (pathname) => {
+		const base = document.querySelector('meta[name="bdih-base-path"]')?.content || '';
+		if (!base || !pathname.startsWith(`${base}/`)) return pathname;
+		return pathname.slice(base.length) || '/';
+	};
+
+	const addBasePath = (pathname) => {
+		const base = document.querySelector('meta[name="bdih-base-path"]')?.content || '';
+		if (!base || pathname.startsWith(`${base}/`)) return pathname;
+		return pathname === '/' ? `${base}/` : `${base}${pathname}`;
+	};
+
 	const getPathForLocale = (pathname, locale) => {
+		pathname = stripBasePath(pathname);
 		const cleanPath = pathname === '/en' ? '/' : pathname.replace(/^\/en(?=\/)/, '');
 
 		if (locale === 'en') {
 			if (pathname === '/en' || pathname.startsWith('/en/')) return pathname;
-			return cleanPath === '/' ? '/en/' : `/en${cleanPath}`;
+			return addBasePath(cleanPath === '/' ? '/en/' : `/en${cleanPath}`);
 		}
 
-		return cleanPath || '/';
+		return addBasePath(cleanPath || '/');
 	};
 
 	const getStoredLocale = () => {
@@ -63,17 +76,19 @@
 	document.addEventListener('change', (event) => {
 		const field = event.target;
 		if (!(field instanceof HTMLSelectElement)) return;
+		if (!field.closest('starlight-lang-select')) return;
 
 		const selectedValue = field.value || field.selectedOptions?.[0]?.value;
 		if (!selectedValue) return;
 
 		const url = new URL(selectedValue, location.href);
-		if (url.origin === location.origin) setStoredLocale(getLocaleFromPath(url.pathname));
+		if (url.origin === location.origin) setStoredLocale(getLocaleFromPath(stripBasePath(url.pathname)));
 	});
 
-	const currentLocale = getLocaleFromPath(location.pathname);
+	const normalizedPath = stripBasePath(location.pathname);
+	const currentLocale = getLocaleFromPath(normalizedPath);
 	const storedLocale = getStoredLocale();
-	const isExplicitEnglishPath = location.pathname === '/en' || location.pathname.startsWith('/en/');
+	const isExplicitEnglishPath = normalizedPath === '/en' || normalizedPath.startsWith('/en/');
 
 	if (isExplicitEnglishPath) {
 		setStoredLocale('en');
