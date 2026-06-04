@@ -33,14 +33,24 @@ export default defineConfig({
 				{ tag: 'meta', attrs: { name: 'bdih-base-path', content: base } },
 				{ tag: 'script', attrs: { src: `${base}/scripts/locale-router.js`, defer: true } },
 			],
-			social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher' }],
+			social: [
+				
+				{ icon: 'discord', label: 'Discord', href: 'https://discord.faby.day' },
+				{ icon: 'github', label: 'GitHub', href: 'https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher' },
+
+			],
 			sidebar: [
 				{
 					label: '가이드',
 					items: [
 						// Each item here is one entry in the navigation menu.
-						{ label: '예제 가이드', slug: 'guides/example' },
+						// { label: '시작하기', slug: 'guides/example' },
+						{ autogenerate: { directory: 'guides' } }
 					],
+				},
+				{
+					label: '빌드',
+					items: [{ autogenerate: { directory: 'build' } }],
 				},
 				{
 					label: '레퍼런스',
