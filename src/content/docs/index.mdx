@@ -1,9 +1,9 @@
 ---
 title: 밥똥이리호요
-description: 밥똥이리호요 문서입니다.
+description: 밥똥이리호요 런처와 관련 기술을 설명하는 문서입니다.
 template: splash
 hero:
-  tagline: 밥똥이리호요 런처와 프로젝트 문서를 한곳에서 확인하세요.
+  tagline: macOS에서 Wine 기반 게임 실행 환경을 구성하기 위한 런처와 관련 기술 문서입니다.
   image:
     file: ../../assets/bobtongirihoyo_wide.png
   actions:
@@ -18,23 +18,22 @@ hero:
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-{/* 
-## 시작하기
+## 문서 개요
+
+밥똥이리호요는 macOS에서 이터널 리턴과 HoYoverse 게임을 실행하기 위해 Wine, DXMT, Rosetta 2 구성을 쉽게 다룰 수 있도록 만든 런처입니다.
+이 문서 사이트는 단순한 사용법뿐 아니라, 런처가 어떤 기술 위에서 동작하는지 이해할 수 있도록 설치 과정과 개발 배경을 함께 설명합니다.
+
 <CardGrid stagger>
-	<Card title="문서 업데이트" icon="pencil">
-		프로젝트 설명과 사용 방법을 이 문서에 추가하세요.
+	<Card title="시작 가이드" icon="right-arrow">
+		프로젝트의 목적, 지원 범위, 사용 전 알아야 할 주의 사항을 먼저 확인할 수 있습니다.
 	</Card>
-	<Card title="가이드 작성" icon="document">
-		설치, 실행, 문제 해결처럼 순서가 있는 작업은 가이드로 정리하세요.
+	<Card title="설치 가이드" icon="download">
+		런처 다운로드, Rosetta 2 설치, quarantine 태그 제거, Bottle 생성과 게임 설치 흐름을 순서대로 정리합니다.
 	</Card>
-	<Card title="새 페이지 추가" icon="add-document">
-		`src/content/docs`에 Markdown 또는 MDX 파일을 추가하면 페이지가 생성됩니다.
+	<Card title="빌드 문서" icon="setting">
+		Wine과 DXMT를 빌드할 때 기준으로 삼는 버전과 필요한 크로스 컴파일러 구성을 설명합니다.
 	</Card>
-	<Card title="사이트 설정" icon="setting">
-		사이드바, 언어, 링크 설정은 `astro.config.mjs`에서 관리합니다.
-	</Card>
-	<Card title="Starlight 문서" icon="open-book">
-		Starlight 사용법은 [공식 문서](https://starlight.astro.build/)에서 확인할 수 있습니다.
+	<Card title="레퍼런스" icon="open-book">
+		Wine, DXMT, Rosetta 2가 각각 어떤 역할을 하는지와 런처 안에서 어떻게 연결되는지 살펴볼 수 있습니다.
 	</Card>
 </CardGrid>
-*/}

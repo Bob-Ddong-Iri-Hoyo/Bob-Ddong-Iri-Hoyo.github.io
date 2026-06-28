@@ -1,0 +1,59 @@
+---
+title: Wine
+description: Wine 관련 개발 메모 및 레퍼런스들
+---
+
+## Wine 역사
+
+<div align="center">
+![](../../../assets/icon_2.png)
+</div>
+
+<div align="center">
+[History](https://gitlab.winehq.org/wine/wine/-/wikis/Wine-History)
+</div>
+
+Wine은 오래된 Windows 프로그램부터 최신 게임까지 다양한 Windows 응용 프로그램을 비 Windows 환경에서 실행하기 위해 발전해 온 호환 계층입니다.
+이름은 종종 에뮬레이터처럼 보이지만, Wine의 핵심 목표는 Windows 전체를 가상화하는 것이 아니라 Windows API를 직접 구현하는 것입니다.
+
+## Wine 구조
+
+Wine이 Windows 프로그램을 실행하는 방식은 여러 DLL과 서버 프로세스가 협력하는 구조로 볼 수 있습니다.
+Windows 프로그램은 `ntdll.dll`, `kernel32.dll`, `user32.dll`, `gdi32.dll` 같은 Windows DLL을 호출합니다.
+Wine은 이 호출을 자체 구현으로 받아서 Linux나 macOS에서 제공하는 시스템 기능으로 연결합니다.
+
+핵심 구성 요소 중 하나는 `ntdll.dll`입니다.
+Windows 프로그램 입장에서 `ntdll.dll`은 더 낮은 수준의 시스템 호출과 런타임 동작에 가까운 역할을 담당합니다.
+Wine은 이 영역을 구현하면서 파일, 프로세스, 스레드, 메모리, 동기화 객체 같은 기능을 호스트 운영체제의 기능과 연결합니다.
+
+또 다른 중요한 구성 요소는 `wineserver`입니다.
+`wineserver`는 여러 Windows 프로세스가 공유해야 하는 상태를 관리합니다.
+예를 들어 핸들, 창, 프로세스 관계, 일부 동기화 객체처럼 Windows 프로그램끼리 일관되게 봐야 하는 정보가 여기에 포함됩니다.
+
+[Wine 구조 공식 레퍼런스](https://gitlab.winehq.org/wine/wine/-/wikis/Wine-Developer's-Guide/Architecture-Overview)
+
+
+## Prefix와 Bottle
+
+Wine에서 prefix는 하나의 독립된 Windows 환경처럼 동작하는 디렉터리입니다.
+이 안에는 가상 C 드라이브, 레지스트리 파일, 설치된 프로그램, 사용자 설정이 저장됩니다.
+
+밥똥이리호요 런처에서 말하는 Bottle은 이러한 Wine prefix를 사용자가 이해하기 쉬운 단위로 관리하는 개념입니다.
+게임마다 필요한 설정이나 Wine 버전이 달라질 수 있으므로, Bottle을 분리하면 한 게임의 설정 변경이 다른 게임에 영향을 주는 일을 줄일 수 있습니다.
+
+## 그래픽 처리
+
+게임 실행에서 Wine만으로는 충분하지 않은 경우가 많습니다.
+특히 DirectX 기반 게임은 그래픽 API 변환 계층이 필요합니다.
+Windows 게임이 DirectX 11을 호출하면, macOS에서는 이를 Metal로 변환해야 화면을 그릴 수 있습니다.
+
+이 프로젝트에서는 그 역할을 주로 DXMT가 담당합니다.
+Wine은 Windows 프로그램 실행 환경을 제공하고, DXMT는 그 안에서 발생하는 DirectX 11 그래픽 호출을 macOS 그래픽 스택으로 연결하는 역할을 맡습니다.
+
+## 프로젝트에서의 의미
+
+밥똥이리호요의 Wine 빌드는 모든 Windows 프로그램을 범용적으로 지원하기 위한 배포판이라기보다, 특정 게임 실행 환경을 맞추기 위한 커스텀 빌드에 가깝습니다.
+Steam 실행, HoYoverse 게임 실행, DirectX 11 그래픽 변환 같은 요구사항을 우선 고려합니다.
+
+따라서 다른 프로그램을 실행할 수는 있지만, 프로젝트의 주요 지원 대상이 아닌 프로그램에서는 호환성 문제가 발생할 수 있습니다.
+문제가 발생했을 때는 Wine 자체 문제인지, DXMT 문제인지, 게임 런처나 보안 모듈 문제인지 구분해서 확인해야 합니다.

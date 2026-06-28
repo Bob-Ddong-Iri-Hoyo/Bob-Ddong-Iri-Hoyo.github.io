@@ -1,0 +1,79 @@
+---
+title: 프로젝트 개발 오버뷰
+description: 밥똥이리호요 런처를 구성하는 주요 기술의 역할을 설명합니다.
+---
+import { Aside } from "@astrojs/starlight/components";
+
+<div align="center">
+![](../../../assets/icon_1.png)
+</div>
+
+## 소개
+
+밥똥이리호요 프로젝트는 macOS에서 일부 Windows 게임을 실행하기 위해 필요한 여러 호환 계층을 한곳에서 다루기 위한 프로젝트입니다.
+핵심 구성 요소는 런처, Wine, Rosetta 2, DXMT이며, 각각은 서로 다른 문제를 해결합니다.
+
+런처는 사용자가 이 구성 요소들을 직접 명령어로 조합하지 않아도 되도록 돕고, Wine은 Windows 프로그램 실행 환경을 제공합니다.
+Rosetta 2는 Apple Silicon Mac에서 x86_64 코드를 실행할 수 있게 하고, DXMT는 DirectX 11 그래픽 호출을 Apple Metal로 변환합니다.
+
+## 런처
+
+밥똥이리호요 런처는 Wine을 CLI로 직접 제어하기 어려운 사용자를 위해 만든 GUI 도구입니다.
+Wine prefix 생성, Wine 버전 선택, DXMT 버전 선택, Steam 설치와 같은 반복 작업을 화면에서 처리할 수 있도록 구성되어 있습니다.
+
+런처에서 제공하는 대부분의 기능은 원칙적으로 CLI에서도 수행할 수 있습니다.
+다만 CLI는 환경 변수, 경로, prefix 구조를 사용자가 직접 이해해야 하므로 진입 장벽이 높습니다.
+런처는 이 과정을 정해진 흐름으로 묶어 사용자가 게임 실행에 필요한 기본 환경을 빠르게 구성할 수 있도록 돕습니다.
+
+## Wine
+
+Wine은 Linux, macOS 같은 비 Windows 운영체제에서 Windows 프로그램을 실행하기 위한 호환 계층입니다.
+Windows 운영체제를 통째로 가상화하는 방식이 아니라, Windows 프로그램이 호출하는 API를 다른 운영체제에서 처리 가능한 형태로 구현합니다.
+
+macOS나 Linux에서 게임을 해 본 사용자라면 Proton, CrossOver, Wine이라는 이름을 한 번쯤 들어봤을 가능성이 높습니다.
+Proton과 CrossOver는 모두 Wine을 기반으로 각자의 목적에 맞게 패치와 배포 방식을 더한 프로젝트로 이해할 수 있습니다.
+Proton은 Steam Deck과 Steam Play에 초점을 맞추고, CrossOver는 CodeWeavers가 상용 제품으로 제공하는 Wine 기반 호환 환경입니다.
+
+밥똥이리호요 런처도 이러한 Wine 생태계 위에서 동작합니다.
+다만 목표가 모든 Windows 프로그램 실행이 아니라 특정 게임 실행 환경 구성에 있으므로, 제공되는 Wine 빌드는 해당 목표에 맞춰 조정됩니다.
+
+## Rosetta 2
+
+Rosetta 2는 Apple Silicon Mac에서 x86_64용으로 빌드된 프로그램을 실행할 수 있게 해 주는 Apple의 변환 기술입니다.
+일반적인 의미의 완전한 가상 머신은 아니며, x86_64 명령을 Apple Silicon에서 실행 가능한 명령으로 변환하는 계층에 가깝습니다.
+
+Rosetta 2는 AOT(Ahead Of Time)와 JIT(Just In Time) 변환을 함께 사용합니다.
+AOT는 프로그램 실행 전에 일부 코드를 미리 변환하는 방식이고, JIT는 실행 중 필요한 코드를 즉시 변환하는 방식입니다.
+이 조합 덕분에 많은 x86_64 프로그램이 Apple Silicon Mac에서도 비교적 자연스럽게 실행될 수 있습니다.
+
+<Aside type="caution">
+Rosetta 2는 Apple이 제공하는 macOS 구성 요소입니다.
+따라서 프로젝트가 직접 유지보수하거나 보장할 수 있는 영역이 아니며, macOS 버전과 Apple 정책에 따라 동작 방식이나 제공 범위가 달라질 수 있습니다.
+</Aside>
+
+## DXMT
+
+DXMT는 Windows의 DirectX 11 그래픽 API 호출을 Apple의 Metal API 호출로 변환하는 레이어입니다.
+macOS는 DirectX를 직접 지원하지 않기 때문에, Windows 게임의 그래픽 명령을 macOS가 이해할 수 있는 형태로 바꾸는 과정이 필요합니다.
+
+CrossOver를 사용해 본 적이 있다면 DXMT, D3DMetal, DXVK 같은 선택지를 본 적이 있을 수 있습니다.
+이들은 모두 Windows 게임의 그래픽 호출을 macOS에서 실행 가능하게 만드는 역할을 하지만, 변환 경로와 목표가 다릅니다.
+
+DXVK를 사용하는 경우 DirectX 11 명령은 대체로 다음과 같은 흐름을 거칩니다.
+
+```text
+DirectX 11 명령 -> Vulkan -> Metal
+```
+
+macOS는 Vulkan을 네이티브 그래픽 API로 제공하지 않으므로, Vulkan 호출을 다시 Metal로 바꾸는 단계가 필요할 수 있습니다.
+반면 DXMT나 D3DMetal 계열은 DirectX 11 명령을 Metal에 더 직접적으로 연결하는 방향을 목표로 합니다.
+
+```text
+DirectX 11 명령 -> Metal
+```
+
+DXMT와 D3DMetal(GPTK)은 공개 범위, 구현 방향, 지원 API에서 차이가 있습니다.
+DXMT는 DirectX 11에 초점을 맞춘 오픈소스 계열의 접근이며, 밥똥이리호요가 주로 다루는 이터널 리턴과 HoYoverse 게임도 DirectX 11 기반 실행 경로가 중요합니다.
+
+이런 이유로 이 프로젝트에서는 Wine, Rosetta 2, DXMT를 함께 묶어 macOS에서 게임 실행 환경을 구성합니다.
+각 구성 요소는 독립적으로 존재하지만, 실제 사용 환경에서는 하나의 실행 경로 안에서 서로 연결되어 동작합니다.

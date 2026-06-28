@@ -1,0 +1,44 @@
+---
+title: 로제타2
+description: Rosetta 2 관련 레퍼런스
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Rosetta 2
+
+<div align="center">
+![](../../../assets/icon_4.png)
+</div>
+
+<div align="center">
+<div>
+[Apple's Rosetta Guide](https://support.apple.com/guide/security/secebb113be1/web)
+
+[Apple's TSO Guide](https://developer.apple.com/documentation/virtualization/accelerating-the-performance-of-rosetta)
+</div>
+</div>
+
+Rosetta 2는 Apple Silicon Mac에서 x86_64용으로 만들어진 프로그램을 실행할 수 있게 해 주는 Apple의 변환 기술입니다.
+Wine 기반 게임 실행 환경에서는 x86_64 Windows 프로그램, Wine 구성 요소, 관련 런타임이 함께 사용될 수 있으므로 Rosetta 2의 역할이 중요해질 수 있습니다.
+
+## 주요 구성
+
+Rosetta 2는 단일 기능만으로 구성된 기술이 아니라, 여러 변환 방식과 CPU 동작 모델 보정이 함께 사용되는 기술로 이해할 수 있습니다.
+
+- **JIT(Just In Time)**: 프로그램 실행 중 필요한 x86_64 코드를 즉시 Apple Silicon에서 실행 가능한 코드로 변환합니다.
+- **AOT(Ahead Of Time)**: 실행 전에 일부 코드를 미리 변환해 반복 실행 시 부담을 줄입니다.
+- **TSO(Total Store Ordering)**: x86 계열 CPU가 전제로 하는 메모리 순서 모델과 Apple Silicon의 동작 차이를 보정하는 데 관련됩니다.
+
+## 프로젝트에서의 역할
+
+밥똥이리호요 런처의 실행 경로에서는 Wine, Windows용 게임, Steam, 그래픽 변환 레이어가 함께 동작합니다.
+이 중 일부 구성 요소가 x86_64 환경을 전제로 하면 Apple Silicon Mac에서는 Rosetta 2의 도움을 받아야 합니다.
+
+Rosetta 2는 사용자가 직접 설정을 많이 조정하는 구성 요소는 아니지만, 설치되어 있지 않으면 특정 실행 파일이 시작되지 않거나 런처 내부 작업이 실패할 수 있습니다.
+따라서 Apple Silicon Mac에서 런처를 사용할 때는 설치 가이드의 Rosetta 2 설치 단계를 먼저 확인하는 것이 좋습니다.
+
+<Aside type="caution">
+Rosetta 2는 Apple이 제공하고 관리하는 macOS 구성 요소입니다.
+프로젝트가 직접 패치하거나 동작을 보장할 수 없으므로, macOS 업데이트 후 실행 방식이 달라질 가능성을 염두에 두어야 합니다.
+</Aside>

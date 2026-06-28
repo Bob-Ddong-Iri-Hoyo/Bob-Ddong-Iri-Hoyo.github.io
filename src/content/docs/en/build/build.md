@@ -1,27 +1,27 @@
 ---
-title: 빌드 시작하기
-description: 빌드 관련 문서입니다.
+title: Build Overview
+description: Baseline information for building Wine and DXMT.
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+## Build Targets
 
-## Wine(와인) 기반
+This page summarizes the build baseline used by the Bob-Ddong-Iri-Hoyo launcher.
+Regular launcher users do not need to build these components manually.
 
-<CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
-  </Card>
+| Component | Version |
+| --- | --- |
+| CrossOver Wine | `26.1.0` |
+| DXMT | `0.80` |
 
-  <Card title="DMXT">
-    <p>Version: <code>0.80</code></p>
-  </Card>
-</CardGrid>
+## Cross-Compiler Setup
 
-## CrossCompiler 빌드 및 설치
+The build process uses two toolchains for different purposes.
 
-2가지 크로스 컴파일러를 사용한다.
+- Wine uses a `mingw` toolchain to build Windows-targeted binaries.
+- DXMT uses an `llvm`-based toolchain for the Metal translation layer.
 
-- `mingw` 툴체인
-- `dxmt` 빌드에 필요한 `llvm`
+The Wine toolchain is prepared from a downloadable toolchain package.
+The DXMT `llvm` setup is kept separate so the build flow stays aligned with the DXMT build guide.
 
-이는 실제 빌드 관련 GitHub에 공개되어 있다.
+When a build fails, first check whether the Wine, DXMT, `mingw`, and `llvm` versions match the expected baseline.
+Small dependency differences can cause build errors or runtime issues in compatibility-layer projects.
