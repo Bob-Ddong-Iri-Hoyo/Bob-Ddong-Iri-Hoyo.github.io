@@ -1,0 +1,39 @@
+---
+title: Bob-Ddong-Iri-Hoyo
+description: Bob-Ddong-Iri-Hoyo ランチャーと関連技術のドキュメントです。
+template: splash
+hero:
+  tagline: macOS で Wine ベースのゲーム実行環境を構成するためのランチャーと関連技術のドキュメントです。
+  image:
+    file: ../../../assets/bobtongirihoyo_wide.png
+  actions:
+    - text: はじめる
+      link: ./guides/get-start/
+      icon: right-arrow
+    - text: GitHub
+      link: https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher
+      icon: github
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## ドキュメント概要
+
+Bob-Ddong-Iri-Hoyo は、macOS で Eternal Return や HoYoverse ゲームを実行するために、Wine、DXMT、Rosetta 2 の構成を扱いやすくするランチャーです。
+このドキュメントサイトでは、基本的な使い方だけでなく、ランチャーがどのような技術の上で動作しているのかも、インストール手順や開発背景とあわせて説明します。
+
+<CardGrid stagger>
+	<Card title="入門ガイド" icon="right-arrow">
+		プロジェクトの目的、対応範囲、使用前に知っておきたい注意点を確認できます。
+	</Card>
+	<Card title="インストールガイド" icon="download">
+		ランチャーのダウンロード、Rosetta 2 のインストール、quarantine タグの削除、Bottle 作成とゲームインストールの流れを順番に整理します。
+	</Card>
+	<Card title="ビルド文書" icon="setting">
+		Wine と DXMT をビルドする際の基準バージョンと、必要なクロスコンパイラ構成を説明します。
+	</Card>
+	<Card title="リファレンス" icon="open-book">
+		Wine、DXMT、Rosetta 2 がそれぞれどのような役割を持ち、ランチャー内でどのようにつながるのかを確認できます。
+	</Card>
+</CardGrid>

@@ -1,0 +1,43 @@
+---
+title: DXMT
+description: DXMT 相关参考资料。
+---
+
+## DXMT
+
+<div align="center">
+![](../../../../assets/icon_3.png)
+</div>
+
+DXMT 是一个图形转换层，用于在 macOS 上运行基于 DirectX 11 的 Windows 游戏。
+Windows 游戏通常通过 Direct3D 11 和 DXGI 处理图形设备、交换链、纹理、着色器和渲染目标。
+由于 macOS 不提供 DirectX，因此需要一个中间层把这些调用转换为 Apple Metal API。
+
+## 作用
+
+DXMT 的作用是把 DirectX 11 命令翻译成 Metal 命令。
+从游戏角度看，它像是在 DirectX 11 环境中运行；从 macOS 角度看，它则像是使用 Metal 的程序。
+
+这个过程并不是简单替换命令。
+DirectX 与 Metal 在资源管理、着色器处理、同步方式、渲染管线表达方式上都有差异，因此 DXMT 必须持续协调两个 API 之间的差别。
+
+## 与 DXVK 的区别
+
+DXVK 是把 DirectX 9/10/11 调用转换为 Vulkan 的代表性项目。
+在 Linux 上可以直接使用 Vulkan，因此 DXVK 是非常强力的选择。
+
+macOS 的情况不同。
+macOS 不原生提供 Vulkan API，因此还需要额外一层把 Vulkan 转换为 Metal。
+这种情况下，图形调用路径会变长，也更难追踪问题发生的位置。
+
+DXMT 的目标是提供从 DirectX 11 到 Metal 的更直接路径。
+这也是 Bob-Ddong-Iri-Hoyo 以 DXMT 为中心配置的原因。
+
+## 限制事项
+
+有了 DXMT 并不意味着所有 DirectX 游戏都会自动运行。
+游戏使用的 DirectX 功能、着色器、反作弊系统或启动器结构，都会影响是否可以运行。
+此外，如果游戏更新改变了图形选项或渲染路径，原本可用的设置也可能不再适合。
+
+本项目优先以运行 Eternal Return 和 HoYoverse 游戏为目标。
+即使 DXMT 在其他游戏中可以工作，也不表示本项目会正式支持该游戏。

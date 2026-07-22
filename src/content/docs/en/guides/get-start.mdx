@@ -1,0 +1,87 @@
+---
+title: Getting Started
+description: A guide for users who are using the Bob-Ddong-Iri-Hoyo launcher for the first time.
+---
+
+import { LinkCard, CardGrid, Card} from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+![Installation screen](../../../../assets/bobtongirihoyo_wide.png)
+
+## What is Bob-Ddong-Iri-Hoyo?
+
+Bob-Ddong-Iri-Hoyo is a Wine launcher for running Eternal Return and HoYoverse games on macOS.
+Internally, it uses a Wine-based runtime, and on Apple Silicon Macs it may also rely on compatibility layers such as Rosetta 2 and DXMT.
+
+The goal of the launcher is to let users choose and manage the Bottles, Wine versions, and graphics translation layers needed to run games without directly handling complex Wine commands or configuration files.
+Users who are already familiar with Wine can still use a CLI environment directly, but most users can perform the same tasks more easily through the launcher.
+
+## Features
+
+It addresses long-standing rendering issues that can appear when running Eternal Return through conventional CrossOver or Wine setups.
+<CardGrid>
+  <Card title="Default Wine">
+![](../../../../assets/get-start/haze1.png)
+  </Card>
+
+  <Card title="Bob-Ddong-Iri-Hoyo Wine">
+  ![](../../../../assets/get-start/haze2.png)
+  </Card>
+</CardGrid>
+<CardGrid>
+  <Card title="Default Wine">
+![](../../../../assets/get-start/felix1.png)
+  </Card>
+
+  <Card title="Bob-Ddong-Iri-Hoyo Wine">
+  ![](../../../../assets/get-start/felix2.png)
+  </Card>
+</CardGrid>
+<CardGrid>
+  <Card title="Default Wine">
+![](../../../../assets/get-start/laura1.png)
+  </Card>
+
+  <Card title="Bob-Ddong-Iri-Hoyo Wine">
+  ![](../../../../assets/get-start/laura2.png)
+  </Card>
+</CardGrid>
+## Documentation Structure
+
+This documentation is written to be read in the following order.
+
+- **Installation**: Explains how to download the launcher and prepare it to run on macOS.
+- **About Wine**: Describes the Wine builds provided by this project and their support scope.
+- **Getting Started with Builds**: Provides baseline information for users who want to build Wine and DXMT themselves or understand the development environment.
+- **Reference**: Adds background knowledge about the roles of Wine, DXMT, and Rosetta 2.
+
+## Notes
+
+<Aside type="caution">
+This project began as a personal project created for the developer's own needs.
+
+Bug fixes and new features are handled according to the developer's schedule, priorities, and technical feasibility.
+Requested features or game support may not always be added, and game updates can change environments that previously worked.
+
+Users are responsible for judging possible risks such as data loss, account issues, game launch errors, or terms-of-service concerns caused by using the app.
+Online games in particular may change their client launch flow or security policies, so understand the risks before using an important account.
+</Aside>
+
+## License
+
+This project follows the **MIT License**.
+
+See [LICENSE](https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher/blob/main/LICENSE) for the full license text and detailed terms.
+
+## Project Links
+
+<CardGrid>
+  <LinkCard
+    title="Bob-Ddong-Iri-Hoyo Launcher GitHub"
+    href="https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher"
+  ></LinkCard>
+  <LinkCard
+    title="CrossOver Wine 26 GitHub"
+    href="https://github.com/Bob-Ddong-Iri-Hoyo/fullbodied-anca-wine-house"
+  ></LinkCard>
+</CardGrid>

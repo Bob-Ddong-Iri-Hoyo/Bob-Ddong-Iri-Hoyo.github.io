@@ -1,0 +1,58 @@
+---
+title: Wine
+description: Wine development notes and references.
+---
+
+## Wine History
+
+<div align="center">
+![](../../../../assets/icon_2.png)
+</div>
+
+<div align="center">
+[History](https://gitlab.winehq.org/wine/wine/-/wikis/Wine-History)
+</div>
+
+Wine is a long-developed compatibility layer for running a wide range of Windows applications, from old Windows programs to modern games, in non-Windows environments.
+Although the name can sound like an emulator, Wine's core goal is not to emulate all of Windows, but to directly implement the Windows API.
+
+## Wine Architecture
+
+Wine's method of running Windows programs can be understood as a structure where several DLLs and a server process cooperate.
+Windows programs call Windows DLLs such as `ntdll.dll`, `kernel32.dll`, `user32.dll`, and `gdi32.dll`.
+Wine receives those calls through its own implementations and connects them to system features provided by Linux or macOS.
+
+One core component is `ntdll.dll`.
+From the perspective of a Windows program, `ntdll.dll` handles lower-level system calls and runtime behavior.
+As Wine implements this layer, it connects features such as files, processes, threads, memory, and synchronization objects to the host operating system.
+
+Another important component is `wineserver`.
+`wineserver` manages state that must be shared across multiple Windows processes.
+For example, handles, windows, process relationships, and some synchronization objects that Windows programs need to see consistently are included here.
+
+[Official Wine architecture reference](https://gitlab.winehq.org/wine/wine/-/wikis/Wine-Developer's-Guide/Architecture-Overview)
+
+## Prefixes and Bottles
+
+In Wine, a prefix is a directory that behaves like an independent Windows environment.
+It stores the virtual C drive, registry files, installed programs, and user settings.
+
+In the Bob-Ddong-Iri-Hoyo launcher, a Bottle is the concept used to manage these Wine prefixes as units that are easier for users to understand.
+Because different games may require different settings or Wine versions, separating Bottles can reduce the chance that changing one game's setup affects another game.
+
+## Graphics Handling
+
+Wine alone is often not enough for running games.
+DirectX-based games in particular require a graphics API translation layer.
+When a Windows game calls DirectX 11, macOS must translate it into Metal to draw the screen.
+
+In this project, DXMT mainly handles that role.
+Wine provides the Windows program runtime environment, and DXMT connects DirectX 11 graphics calls occurring inside that environment to the macOS graphics stack.
+
+## Meaning in This Project
+
+The Wine builds in Bob-Ddong-Iri-Hoyo are closer to custom builds for specific game runtime environments than general-purpose distributions for all Windows programs.
+They prioritize requirements such as Steam launch behavior, HoYoverse game execution, and DirectX 11 graphics translation.
+
+Other programs may run, but compatibility issues can occur with programs outside the project's primary support targets.
+When problems occur, it is important to distinguish whether the issue comes from Wine itself, DXMT, the game launcher, or a security module.

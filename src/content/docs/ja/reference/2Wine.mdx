@@ -1,0 +1,58 @@
+---
+title: Wine
+description: Wine 関連の開発メモとリファレンスです。
+---
+
+## Wine の歴史
+
+<div align="center">
+![](../../../../assets/icon_2.png)
+</div>
+
+<div align="center">
+[History](https://gitlab.winehq.org/wine/wine/-/wikis/Wine-History)
+</div>
+
+Wine は、古い Windows プログラムから最新ゲームまで、さまざまな Windows アプリケーションを非 Windows 環境で実行するために発展してきた互換レイヤーです。
+名前はエミュレーターのように見えることもありますが、Wine の核心的な目標は Windows 全体を仮想化することではなく、Windows API を直接実装することです。
+
+## Wine の構造
+
+Wine が Windows プログラムを実行する方式は、複数の DLL とサーバープロセスが協力する構造として見ることができます。
+Windows プログラムは `ntdll.dll`、`kernel32.dll`、`user32.dll`、`gdi32.dll` のような Windows DLL を呼び出します。
+Wine はこれらの呼び出しを独自実装で受け取り、Linux や macOS が提供するシステム機能へ接続します。
+
+重要な構成要素のひとつが `ntdll.dll` です。
+Windows プログラムから見ると、`ntdll.dll` はより低レベルのシステム呼び出しやランタイム動作に近い役割を担います。
+Wine はこの領域を実装しながら、ファイル、プロセス、スレッド、メモリ、同期オブジェクトなどの機能をホスト OS の機能へ接続します。
+
+もうひとつ重要な構成要素が `wineserver` です。
+`wineserver` は、複数の Windows プロセスが共有する必要のある状態を管理します。
+たとえばハンドル、ウィンドウ、プロセス関係、一部の同期オブジェクトなど、Windows プログラム同士が一貫して参照する必要のある情報がここに含まれます。
+
+[Wine 構造の公式リファレンス](https://gitlab.winehq.org/wine/wine/-/wikis/Wine-Developer's-Guide/Architecture-Overview)
+
+## Prefix と Bottle
+
+Wine における prefix は、ひとつの独立した Windows 環境のように動作するディレクトリです。
+この中には仮想 C ドライブ、レジストリファイル、インストール済みプログラム、ユーザー設定が保存されます。
+
+Bob-Ddong-Iri-Hoyo ランチャーでいう Bottle は、このような Wine prefix をユーザーが理解しやすい単位として管理する概念です。
+ゲームごとに必要な設定や Wine バージョンが異なる場合があるため、Bottle を分けることで、あるゲームの設定変更が別のゲームに影響することを減らせます。
+
+## グラフィック処理
+
+ゲーム実行では、Wine だけでは十分ではない場合が多くあります。
+特に DirectX ベースのゲームでは、グラフィック API 変換レイヤーが必要です。
+Windows ゲームが DirectX 11 を呼び出すと、macOS ではそれを Metal に変換しなければ画面を描画できません。
+
+このプロジェクトでは、その役割を主に DXMT が担当します。
+Wine は Windows プログラムの実行環境を提供し、DXMT はその中で発生する DirectX 11 のグラフィック呼び出しを macOS のグラフィックスタックへ接続します。
+
+## プロジェクトにおける意味
+
+Bob-Ddong-Iri-Hoyo の Wine ビルドは、すべての Windows プログラムを汎用的にサポートする配布版というより、特定ゲームの実行環境に合わせるためのカスタムビルドに近いものです。
+Steam の起動、HoYoverse ゲームの実行、DirectX 11 グラフィック変換といった要件を優先して考慮します。
+
+そのため他のプログラムを実行できる場合もありますが、プロジェクトの主な対応対象ではないプログラムでは互換性問題が発生することがあります。
+問題が発生した場合は、Wine 自体の問題なのか、DXMT の問題なのか、ゲームランチャーやセキュリティモジュールの問題なのかを切り分けて確認する必要があります。

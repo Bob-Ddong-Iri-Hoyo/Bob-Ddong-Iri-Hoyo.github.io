@@ -1,0 +1,87 @@
+---
+title: 开始使用
+description: 面向首次使用 Bob-Ddong-Iri-Hoyo 启动器的用户指南。
+---
+
+import { LinkCard, CardGrid, Card} from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+![安装界面](../../../../assets/bobtongirihoyo_wide.png)
+
+## 什么是 Bob-Ddong-Iri-Hoyo？
+
+Bob-Ddong-Iri-Hoyo 是一个 Wine 启动器，用于在 macOS 上运行 Eternal Return 和 HoYoverse 游戏。
+它内部使用基于 Wine 的运行环境，在 Apple Silicon Mac 上也可能配合 Rosetta 2、DXMT 等兼容层一起使用。
+
+这个启动器的目标，是让用户不必直接处理复杂的 Wine 命令和配置文件，也能选择并管理运行游戏所需的 Bottle、Wine 版本和图形转换层。
+熟悉 Wine 的用户仍然可以直接使用 CLI 环境；而普通用户可以通过启动器更轻松地完成同样的操作。
+
+## 特性
+
+它用于解决在传统 CrossOver 或 Wine 中运行 Eternal Return 时常见的渲染问题。
+<CardGrid>
+  <Card title="默认 Wine">
+![](../../../../assets/get-start/haze1.png)
+  </Card>
+
+  <Card title="Bob-Ddong-Iri-Hoyo Wine">
+  ![](../../../../assets/get-start/haze2.png)
+  </Card>
+</CardGrid>
+<CardGrid>
+  <Card title="默认 Wine">
+![](../../../../assets/get-start/felix1.png)
+  </Card>
+
+  <Card title="Bob-Ddong-Iri-Hoyo Wine">
+  ![](../../../../assets/get-start/felix2.png)
+  </Card>
+</CardGrid>
+<CardGrid>
+  <Card title="默认 Wine">
+![](../../../../assets/get-start/laura1.png)
+  </Card>
+
+  <Card title="Bob-Ddong-Iri-Hoyo Wine">
+  ![](../../../../assets/get-start/laura2.png)
+  </Card>
+</CardGrid>
+## 文档结构
+
+建议按下面的顺序阅读这份文档。
+
+- **安装**：说明如何下载启动器，并让它可以在 macOS 上运行。
+- **关于 Wine**：说明本项目提供的 Wine 构建以及支持范围。
+- **开始构建**：为想要自行构建 Wine、DXMT，或理解开发环境的用户整理基准信息。
+- **参考资料**：补充 Wine、DXMT、Rosetta 2 各自作用的背景知识。
+
+## 注意事项
+
+<Aside type="caution">
+本项目最初是出于个人需求而开始的项目。
+
+错误修复和功能追加会根据开发者的时间、优先级和技术可行性推进。
+被请求的功能或游戏支持不一定都会被加入；特定游戏更新后，原本可以运行的环境也可能发生变化。
+
+使用本应用可能带来的数据丢失、账号问题、游戏运行错误或服务条款风险，需要由用户自行判断。
+尤其是在线游戏的客户端启动方式和安全策略可能会变化，在重要账号上使用前请充分理解相关风险。
+</Aside>
+
+## 许可证
+
+本项目遵循 **MIT License**。
+
+完整许可证内容和详细条件请参考 [LICENSE](https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher/blob/main/LICENSE)。
+
+## 项目链接
+
+<CardGrid>
+  <LinkCard
+    title="Bob-Ddong-Iri-Hoyo Launcher GitHub"
+    href="https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher"
+  ></LinkCard>
+  <LinkCard
+    title="CrossOver Wine 26 GitHub"
+    href="https://github.com/Bob-Ddong-Iri-Hoyo/fullbodied-anca-wine-house"
+  ></LinkCard>
+</CardGrid>

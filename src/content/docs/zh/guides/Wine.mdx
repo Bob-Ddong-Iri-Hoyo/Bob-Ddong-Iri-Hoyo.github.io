@@ -1,0 +1,37 @@
+---
+title: 关于 Wine
+description: 说明 Bob-Ddong-Iri-Hoyo 提供的 Wine 构建及其支持范围。
+---
+
+## 提供的 Wine 构建
+
+Bob-Ddong-Iri-Hoyo 提供的 Wine 由基于 CodeWeavers [CrossOver](https://www.codeweavers.com/crossover/source) 开源代码的自定义构建，以及基于 WineHQ 11.10 的自定义构建组成。
+本文档采用的 CrossOver Wine 基准版本是 `26.1.0`。
+
+Wine 是一个兼容层，可以将 Windows 程序的 Windows API 调用转换为 macOS 可以处理的形式，从而在 macOS 上运行这些程序。
+它不是像虚拟机那样运行完整的 Windows 操作系统，因此每个程序的兼容性和稳定性都可能不同。
+
+## 以 DXMT 为中心的配置
+
+本项目的 Wine 配置主要面向使用 DirectX 11 的 Eternal Return 和 HoYoverse 游戏。
+因此图形转换层主要以 DXMT 为中心提供。
+DXMT 会将 DirectX 11 命令转换为 Apple Metal API，使其能够在 macOS 上运行。
+
+也存在像 DXVK 这样经过 Vulkan 的方式，但 macOS 并不原生提供 Vulkan 图形 API。
+因此可能还需要额外的转换层将 Vulkan 再转换为 Metal；本项目会根据目标游戏和 macOS 环境，选择以 DXMT 为中心的配置。
+
+## 启动器与 CLI
+
+能够直接操作 Wine 的用户，使用 CLI 版本可能会更灵活。
+因为在 CLI 环境中，可以更细致地控制 Wine prefix、环境变量和运行选项。
+
+相反，不熟悉 Wine 设置的用户更适合使用启动器。
+启动器通过 GUI 提供 Bottle 创建、Wine 版本选择、DXMT 版本选择等重复操作，从而减少配置失误。
+
+## 代码自定义
+
+本项目提供的 Wine 包含一些用于解决 Steam 启动问题和 HoYoverse 游戏运行问题的补丁。
+这些补丁并不是为了完美支持所有 Windows 程序，而是针对本项目目标游戏运行环境而应用的修改。
+
+为了让 HoYoverse 游戏可以运行，项目参考了 [Dawn Winery](https://dawn.wine/dawn-winery) 的部分代码。
+相关修改可能会直接影响 Wine 的内部行为，因此在其他游戏或普通 Windows 程序中可能出现预期外的问题。

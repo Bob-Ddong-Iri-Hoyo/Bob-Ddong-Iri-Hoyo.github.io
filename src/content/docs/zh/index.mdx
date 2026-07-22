@@ -1,0 +1,39 @@
+---
+title: Bob-Ddong-Iri-Hoyo
+description: Bob-Ddong-Iri-Hoyo 启动器及相关技术文档。
+template: splash
+hero:
+  tagline: 面向 macOS Wine 游戏运行环境的启动器与相关技术文档。
+  image:
+    file: ../../../assets/bobtongirihoyo_wide.png
+  actions:
+    - text: 开始使用
+      link: ./guides/get-start/
+      icon: right-arrow
+    - text: GitHub
+      link: https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher
+      icon: github
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## 文档概览
+
+Bob-Ddong-Iri-Hoyo 是一个启动器，用于在 macOS 上更方便地运行 Eternal Return 和 HoYoverse 游戏，并管理 Wine、DXMT、Rosetta 2 等组件。
+本站不仅整理了基础用法，也会说明安装流程以及启动器背后的技术背景。
+
+<CardGrid stagger>
+	<Card title="入门指南" icon="right-arrow">
+		先了解项目目标、支持范围，以及使用前需要注意的事项。
+	</Card>
+	<Card title="安装指南" icon="download">
+		依次说明启动器下载、Rosetta 2 安装、移除 quarantine 标签、创建 Bottle 和安装游戏的流程。
+	</Card>
+	<Card title="构建文档" icon="setting">
+		说明构建 Wine 与 DXMT 时使用的基准版本，以及所需的交叉编译器配置。
+	</Card>
+	<Card title="参考资料" icon="open-book">
+		了解 Wine、DXMT、Rosetta 2 各自的作用，以及它们在启动器中如何衔接。
+	</Card>
+</CardGrid>

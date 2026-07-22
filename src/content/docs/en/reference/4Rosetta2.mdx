@@ -1,0 +1,44 @@
+---
+title: Rosetta 2
+description: Rosetta 2-related reference.
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Rosetta 2
+
+<div align="center">
+![](../../../../assets/icon_4.png)
+</div>
+
+<div align="center">
+<div>
+[Apple's Rosetta Guide](https://support.apple.com/guide/security/secebb113be1/web)
+
+[Apple's TSO Guide](https://developer.apple.com/documentation/virtualization/accelerating-the-performance-of-rosetta)
+</div>
+</div>
+
+Rosetta 2 is Apple's translation technology that allows Apple Silicon Macs to run programs built for x86_64.
+In Wine-based game runtime environments, x86_64 Windows programs, Wine components, and related runtimes may be used together, so Rosetta 2 can play an important role.
+
+## Main Components
+
+Rosetta 2 is not a technology made of only one feature. It can be understood as a combination of multiple translation methods and CPU behavior model adjustments.
+
+- **JIT (Just In Time)**: Converts x86_64 code needed during program execution into code that can run on Apple Silicon immediately.
+- **AOT (Ahead Of Time)**: Converts some code before execution to reduce overhead during repeated runs.
+- **TSO (Total Store Ordering)**: Relates to adjusting differences between the memory ordering model assumed by x86-family CPUs and the behavior of Apple Silicon.
+
+## Role in This Project
+
+In the Bob-Ddong-Iri-Hoyo launcher's execution path, Wine, Windows games, Steam, and graphics translation layers work together.
+If some of these components assume an x86_64 environment, Apple Silicon Macs need help from Rosetta 2.
+
+Rosetta 2 is not a component users usually configure in detail, but if it is not installed, certain executables may fail to start or internal launcher tasks may fail.
+Therefore, when using the launcher on an Apple Silicon Mac, it is a good idea to check the Rosetta 2 installation step in the installation guide first.
+
+<Aside type="caution">
+Rosetta 2 is a macOS component provided and managed by Apple.
+Because this project cannot directly patch or guarantee its behavior, keep in mind that the execution behavior may change after macOS updates.
+</Aside>

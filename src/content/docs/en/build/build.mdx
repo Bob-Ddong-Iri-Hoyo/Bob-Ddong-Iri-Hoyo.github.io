@@ -1,0 +1,40 @@
+---
+title: Getting Started with Builds
+description: Baseline information required to build Wine and DXMT.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## Build Baseline
+
+<CardGrid>
+  <Card title="CrossOver Wine">
+    <p>Version: <code>26.1.0</code></p>
+  </Card>
+
+  <Card title="DXMT">
+    <p>Version: <code>0.80</code></p>
+  </Card>
+</CardGrid>
+
+This document summarizes the baseline information for users who want to build the Wine and DXMT components used by the Bob-Ddong-Iri-Hoyo launcher, or understand the build environment.
+If you only use the launcher, you do not need to build these components yourself.
+
+## Cross-Compiler Setup
+
+The build process uses two toolchains for different purposes.
+
+- Wine builds require a `mingw` toolchain for producing Windows-targeted binaries.
+- DXMT builds require `llvm`-based tools for building the Metal translation layer.
+
+The `mingw` toolchain for Wine is downloaded from a separately prepared toolchain package.
+The `llvm` setup for DXMT is treated as a separate build so it stays aligned with the DXMT build flow.
+These setups could be merged into one shared toolchain, but this documentation currently follows the DXMT tutorial flow and separates the Wine and DXMT build steps.
+
+## How to Read the Build Docs
+
+This page focuses on explaining which components are needed and why, rather than listing every build command.
+For actual build scripts and detailed commands, check the README and build documentation in the related repositories.
+
+When a build fails, first check whether the Wine version, DXMT version, `mingw` version, and `llvm` version match the baseline in this documentation.
+Compatibility-layer projects are strongly affected by dependency versions, so even small version differences can lead to build errors or runtime issues.

@@ -1,0 +1,44 @@
+---
+title: Rosetta 2
+description: Rosetta 2 関連のリファレンスです。
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Rosetta 2
+
+<div align="center">
+![](../../../../assets/icon_4.png)
+</div>
+
+<div align="center">
+<div>
+[Apple's Rosetta Guide](https://support.apple.com/guide/security/secebb113be1/web)
+
+[Apple's TSO Guide](https://developer.apple.com/documentation/virtualization/accelerating-the-performance-of-rosetta)
+</div>
+</div>
+
+Rosetta 2 は、Apple Silicon Mac で x86_64 向けに作られたプログラムを実行できるようにする Apple の変換技術です。
+Wine ベースのゲーム実行環境では、x86_64 Windows プログラム、Wine 構成要素、関連ランタイムが一緒に使われることがあるため、Rosetta 2 の役割が重要になる場合があります。
+
+## 主な構成
+
+Rosetta 2 は単一機能だけで構成された技術ではなく、複数の変換方式と CPU 動作モデルの補正が組み合わさった技術として理解できます。
+
+- **JIT（Just In Time）**: プログラム実行中に必要な x86_64 コードを、Apple Silicon で実行可能なコードへ即時変換します。
+- **AOT（Ahead Of Time）**: 実行前に一部のコードを事前に変換し、繰り返し実行時の負担を減らします。
+- **TSO（Total Store Ordering）**: x86 系 CPU が前提とするメモリ順序モデルと Apple Silicon の動作差を補正することに関係します。
+
+## プロジェクトでの役割
+
+Bob-Ddong-Iri-Hoyo ランチャーの実行経路では、Wine、Windows 用ゲーム、Steam、グラフィック変換レイヤーが一緒に動作します。
+このうち一部の構成要素が x86_64 環境を前提としている場合、Apple Silicon Mac では Rosetta 2 の助けが必要になります。
+
+Rosetta 2 はユーザーが細かく設定を調整する構成要素ではありませんが、インストールされていないと特定の実行ファイルが起動しなかったり、ランチャー内部の作業が失敗したりすることがあります。
+そのため Apple Silicon Mac でランチャーを使う場合は、インストールガイドの Rosetta 2 インストール手順を先に確認することをおすすめします。
+
+<Aside type="caution">
+Rosetta 2 は Apple が提供し管理する macOS 構成要素です。
+プロジェクトが直接パッチを当てたり動作を保証したりすることはできないため、macOS アップデート後に実行方式が変わる可能性を考慮してください。
+</Aside>

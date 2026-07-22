@@ -1,0 +1,37 @@
+---
+title: Wine について
+description: Bob-Ddong-Iri-Hoyo が提供する Wine ビルドと対応範囲を説明します。
+---
+
+## 提供される Wine ビルド
+
+Bob-Ddong-Iri-Hoyo で提供される Wine は、CodeWeavers の [CrossOver](https://www.codeweavers.com/crossover/source) 公開ソースをベースにしたカスタムビルドと、WineHQ 11.10 ベースのカスタムビルドで構成されています。
+このドキュメントで基準にしている CrossOver Wine バージョンは `26.1.0` です。
+
+Wine は、Windows プログラムを macOS 上で実行できるように、Windows API 呼び出しを macOS で処理可能な形へ変換する互換レイヤーです。
+仮想マシンのように Windows OS 全体を実行する方式ではないため、プログラムごとに互換性や安定性が異なる場合があります。
+
+## DXMT 中心の構成
+
+このプロジェクトの Wine 構成は、DirectX 11 を使用する Eternal Return と HoYoverse ゲームの実行を主な目標にしています。
+そのため、グラフィック変換レイヤーは DXMT を中心に提供します。
+DXMT は DirectX 11 コマンドを Apple Metal API に変換し、macOS 上で実行できるようにします。
+
+DXVK のように Vulkan を経由する方式もありますが、macOS は Vulkan をネイティブのグラフィック API として提供していません。
+そのため Vulkan をさらに Metal へ変換する追加レイヤーが必要になることがあり、このプロジェクトでは対象ゲームと macOS 環境を考慮して DXMT 中心の構成を選択しています。
+
+## ランチャーと CLI
+
+Wine を直接扱えるユーザーは、CLI 版を使う方がより柔軟な場合があります。
+CLI 環境では Wine prefix、環境変数、実行オプションを細かく制御できるためです。
+
+一方、Wine 設定に慣れていないユーザーにはランチャーの使用がより適しています。
+ランチャーは Bottle 作成、Wine バージョン選択、DXMT バージョン選択などの繰り返し作業を GUI で提供し、設定ミスを減らす役割を持ちます。
+
+## コードのカスタマイズ
+
+提供される Wine には、Steam の起動問題や HoYoverse ゲームの実行問題を解決するための一部パッチが含まれています。
+これらのパッチはすべての Windows プログラムを完全にサポートするためのものではなく、プロジェクトが目標とするゲーム実行環境に合わせて適用された変更です。
+
+HoYoverse ゲームを実行可能にするため、[Dawn Winery](https://dawn.wine/dawn-winery) のコードを一部参考にしています。
+関連する変更は Wine の内部動作に直接影響する可能性があるため、他のゲームや一般的な Windows プログラムでは予期しない問題が発生する場合があります。

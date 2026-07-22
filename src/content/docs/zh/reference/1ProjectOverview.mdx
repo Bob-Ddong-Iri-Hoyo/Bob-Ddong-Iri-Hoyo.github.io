@@ -1,0 +1,79 @@
+---
+title: 项目开发概览
+description: 说明构成 Bob-Ddong-Iri-Hoyo 启动器的主要技术及其作用。
+---
+import { Aside } from "@astrojs/starlight/components";
+
+<div align="center">
+![](../../../../assets/icon_1.png)
+</div>
+
+## 介绍
+
+Bob-Ddong-Iri-Hoyo 项目旨在把 macOS 上运行部分 Windows 游戏所需的多个兼容层集中到一个地方管理。
+核心组件包括启动器、Wine、Rosetta 2 和 DXMT，它们分别解决不同的问题。
+
+启动器帮助用户不必手动组合这些组件和命令；Wine 提供 Windows 程序运行环境。
+Rosetta 2 让 Apple Silicon Mac 可以运行 x86_64 代码，DXMT 则将 DirectX 11 图形调用转换为 Apple Metal。
+
+## 启动器
+
+Bob-Ddong-Iri-Hoyo 启动器是为不方便直接用 CLI 控制 Wine 的用户准备的 GUI 工具。
+它把创建 Wine prefix、选择 Wine 版本、选择 DXMT 版本、安装 Steam 等重复操作放在界面中处理。
+
+启动器提供的大多数功能原则上也可以通过 CLI 完成。
+但 CLI 要求用户自己理解环境变量、路径和 prefix 结构，因此门槛更高。
+启动器把这些过程整理成固定流程，帮助用户快速配置运行游戏所需的基础环境。
+
+## Wine
+
+Wine 是用于在 Linux、macOS 等非 Windows 操作系统上运行 Windows 程序的兼容层。
+它不是把整个 Windows 操作系统虚拟化，而是在其他操作系统上实现 Windows 程序调用的 API。
+
+如果你曾在 macOS 或 Linux 上玩游戏，可能听过 Proton、CrossOver、Wine 这些名字。
+Proton 和 CrossOver 都可以理解为基于 Wine，并根据各自目标添加补丁和发布方式的项目。
+Proton 主要面向 Steam Deck 与 Steam Play，CrossOver 则是 CodeWeavers 提供的商业 Wine 兼容环境。
+
+Bob-Ddong-Iri-Hoyo 启动器也运行在这样的 Wine 生态之上。
+不过它的目标不是运行所有 Windows 程序，而是配置特定游戏的运行环境，因此提供的 Wine 构建会围绕这个目标进行调整。
+
+## Rosetta 2
+
+Rosetta 2 是 Apple 的转换技术，用于让 Apple Silicon Mac 运行面向 x86_64 构建的程序。
+它不是通常意义上的完整虚拟机，更接近于把 x86_64 指令转换为 Apple Silicon 可执行指令的层。
+
+Rosetta 2 同时使用 AOT（Ahead Of Time）和 JIT（Just In Time）转换。
+AOT 会在程序运行前预先转换部分代码，JIT 则会在运行过程中即时转换所需代码。
+正因为两者结合，许多 x86_64 程序也可以在 Apple Silicon Mac 上较自然地运行。
+
+<Aside type="caution">
+Rosetta 2 是 Apple 提供的 macOS 组件。
+因此它不是本项目能够直接维护或保证的范围，其行为和提供范围可能会随着 macOS 版本和 Apple 政策而变化。
+</Aside>
+
+## DXMT
+
+DXMT 是将 Windows DirectX 11 图形 API 调用转换为 Apple Metal API 调用的层。
+由于 macOS 不直接支持 DirectX，Windows 游戏的图形命令必须转换成 macOS 能理解的形式。
+
+如果使用过 CrossOver，可能见过 DXMT、D3DMetal、DXVK 等选项。
+它们都用于让 Windows 游戏的图形调用可以在 macOS 上执行，但转换路径和目标并不相同。
+
+使用 DXVK 时，DirectX 11 命令通常会经过下面的路径。
+
+```text
+DirectX 11 命令 -> Vulkan -> Metal
+```
+
+macOS 不原生提供 Vulkan 图形 API，因此可能还需要把 Vulkan 调用再次转换为 Metal。
+而 DXMT 或 D3DMetal 系列则更倾向于将 DirectX 11 命令更直接地连接到 Metal。
+
+```text
+DirectX 11 命令 -> Metal
+```
+
+DXMT 与 D3DMetal（GPTK）在公开范围、实现方向和支持 API 上存在差异。
+DXMT 是以 DirectX 11 为重点的开源系方案，而 Bob-Ddong-Iri-Hoyo 主要处理的 Eternal Return 和 HoYoverse 游戏也很重视 DirectX 11 运行路径。
+
+因此，本项目会把 Wine、Rosetta 2、DXMT 组合起来，在 macOS 上配置游戏运行环境。
+各组件可以独立存在，但在实际使用环境中，它们会在同一条运行路径中彼此衔接并工作。

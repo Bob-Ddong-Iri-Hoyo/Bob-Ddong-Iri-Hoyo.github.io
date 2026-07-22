@@ -1,10 +1,13 @@
 (() => {
 	const storageKey = 'bdih-preferred-locale';
-	const supportedLocales = new Set(['ko', 'en']);
+	const rootLocale = 'ko';
+	const pathLocales = ['en', 'zh', 'ja'];
+	const supportedLocales = new Set([rootLocale, ...pathLocales]);
 
 	const getLocaleFromPath = (pathname) => {
-		if (pathname === '/en' || pathname.startsWith('/en/')) return 'en';
-		return 'ko';
+		pathname = stripBasePath(pathname);
+		const locale = pathLocales.find((locale) => pathname === `/${locale}` || pathname.startsWith(`/${locale}/`));
+		return locale || rootLocale;
 	};
 
 	const stripBasePath = (pathname) => {
@@ -21,11 +24,11 @@
 
 	const getPathForLocale = (pathname, locale) => {
 		pathname = stripBasePath(pathname);
-		const cleanPath = pathname === '/en' ? '/' : pathname.replace(/^\/en(?=\/)/, '');
+		const localePattern = new RegExp(`^/(${pathLocales.join('|')})(?=/|$)`);
+		const cleanPath = pathname.replace(localePattern, '') || '/';
 
-		if (locale === 'en') {
-			if (pathname === '/en' || pathname.startsWith('/en/')) return pathname;
-			return addBasePath(cleanPath === '/' ? '/en/' : `/en${cleanPath}`);
+		if (locale !== rootLocale) {
+			return addBasePath(cleanPath === '/' ? `/${locale}/` : `/${locale}${cleanPath}`);
 		}
 
 		return addBasePath(cleanPath || '/');
@@ -51,8 +54,14 @@
 
 	const getBrowserLocale = () => {
 		const languages = navigator.languages?.length ? navigator.languages : [navigator.language];
-		const prefersEnglish = languages.some((language) => language?.toLowerCase().startsWith('en'));
-		return prefersEnglish ? 'en' : 'ko';
+		for (const language of languages) {
+			const normalizedLanguage = language?.toLowerCase();
+			if (normalizedLanguage?.startsWith('zh')) return 'zh';
+			if (normalizedLanguage?.startsWith('ja')) return 'ja';
+			if (normalizedLanguage?.startsWith('en')) return 'en';
+			if (normalizedLanguage?.startsWith('ko')) return 'ko';
+		}
+		return rootLocale;
 	};
 
 	const redirectToLocale = (locale) => {
@@ -88,10 +97,10 @@
 	const normalizedPath = stripBasePath(location.pathname);
 	const currentLocale = getLocaleFromPath(normalizedPath);
 	const storedLocale = getStoredLocale();
-	const isExplicitEnglishPath = normalizedPath === '/en' || normalizedPath.startsWith('/en/');
+	const isExplicitLocalePath = pathLocales.some((locale) => normalizedPath === `/${locale}` || normalizedPath.startsWith(`/${locale}/`));
 
-	if (isExplicitEnglishPath) {
-		setStoredLocale('en');
+	if (isExplicitLocalePath) {
+		setStoredLocale(currentLocale);
 		return;
 	}
 

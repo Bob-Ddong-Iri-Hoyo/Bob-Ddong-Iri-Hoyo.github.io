@@ -1,13 +1,13 @@
 ---
 title: Bob-Ddong-Iri-Hoyo
-description: Documentation for Bob-Ddong-Iri-Hoyo.
+description: Documentation for the Bob-Ddong-Iri-Hoyo launcher and related technologies.
 template: splash
 hero:
-  tagline: Find launcher and project documentation in one place.
+  tagline: Launcher and technical documentation for setting up a Wine-based game runtime on macOS.
   image:
     file: ../../../assets/bobtongirihoyo_wide.png
   actions:
-    - text: Get Start
+    - text: Get started
       link: ./guides/get-start/
       icon: right-arrow
     - text: GitHub
@@ -18,22 +18,22 @@ hero:
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-## Get Started
+## Documentation Overview
+
+Bob-Ddong-Iri-Hoyo is a launcher designed to make it easier to run Eternal Return and HoYoverse games on macOS by managing Wine, DXMT, and Rosetta 2 configurations.
+This documentation explains not only how to use the launcher, but also the installation flow and the technical background behind how it works.
 
 <CardGrid stagger>
-	<Card title="Update content" icon="pencil">
-		Add project descriptions and usage instructions to these docs.
+	<Card title="Getting started" icon="right-arrow">
+		Start here for the project goals, supported scope, and important notes before using the launcher.
 	</Card>
-	<Card title="Write guides" icon="document">
-		Use guides for ordered tasks like installation, running, configuration, and troubleshooting.
+	<Card title="Installation guide" icon="download">
+		Follow the full flow for downloading the launcher, installing Rosetta 2, removing quarantine tags, creating Bottles, and installing games.
 	</Card>
-	<Card title="Add pages" icon="add-document">
-		Add Markdown or MDX files to `src/content/docs/en` to create English pages.
+	<Card title="Build docs" icon="setting">
+		Learn the baseline Wine and DXMT versions and the cross-compiler setup used when building these components.
 	</Card>
-	<Card title="Configure the site" icon="setting">
-		Manage sidebar, language, and link settings in `astro.config.mjs`.
-	</Card>
-	<Card title="Starlight docs" icon="open-book">
-		Learn more in the [official Starlight documentation](https://starlight.astro.build/).
+	<Card title="Reference" icon="open-book">
+		Read how Wine, DXMT, and Rosetta 2 each work and how they connect inside the launcher.
 	</Card>
 </CardGrid>

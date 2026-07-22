@@ -17,6 +17,8 @@ export default defineConfig({
 			title: {
 				ko: '밥똥이리호요',
 				en: 'Bob-Ddong-Iri-Hoyo',
+				'zh-CN': 'Bob-Ddong-Iri-Hoyo',
+				ja: 'Bob-Ddong-Iri-Hoyo',
 			},
 			defaultLocale: 'root',
 			locales: {
@@ -27,6 +29,14 @@ export default defineConfig({
 				en: {
 					label: 'English',
 					lang: 'en',
+				},
+				zh: {
+					label: '简体中文',
+					lang: 'zh-CN',
+				},
+				ja: {
+					label: '日本語',
+					lang: 'ja',
 				},
 			},
 			head: [
@@ -42,6 +52,7 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: '가이드',
+					translations: { en: 'Guides', 'zh-CN': '指南', ja: 'ガイド' },
 					items: [
 						// Each item here is one entry in the navigation menu.
 						// { label: '시작하기', slug: 'guides/example' },
@@ -50,10 +61,12 @@ export default defineConfig({
 				},
 				{
 					label: '빌드',
+					translations: { en: 'Build', 'zh-CN': '构建', ja: 'ビルド' },
 					items: [{ autogenerate: { directory: 'build' } }],
 				},
 				{
 					label: '레퍼런스',
+					translations: { en: 'Reference', 'zh-CN': '参考', ja: 'リファレンス' },
 					items: [{ autogenerate: { directory: 'reference' } }],
 				},
 			],

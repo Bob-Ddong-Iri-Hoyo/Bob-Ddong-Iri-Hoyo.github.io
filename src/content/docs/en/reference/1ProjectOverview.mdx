@@ -1,0 +1,79 @@
+---
+title: Project Development Overview
+description: The roles of the major technologies that make up the Bob-Ddong-Iri-Hoyo launcher.
+---
+import { Aside } from "@astrojs/starlight/components";
+
+<div align="center">
+![](../../../../assets/icon_1.png)
+</div>
+
+## Introduction
+
+The Bob-Ddong-Iri-Hoyo project brings together several compatibility layers needed to run certain Windows games on macOS.
+Its core components are the launcher, Wine, Rosetta 2, and DXMT, and each solves a different problem.
+
+The launcher helps users avoid manually combining these components through commands, while Wine provides the Windows program runtime environment.
+Rosetta 2 allows Apple Silicon Macs to run x86_64 code, and DXMT translates DirectX 11 graphics calls into Apple Metal.
+
+## Launcher
+
+The Bob-Ddong-Iri-Hoyo launcher is a GUI tool for users who find it difficult to control Wine directly through the CLI.
+It is designed to handle repetitive tasks on screen, such as creating Wine prefixes, selecting Wine versions, selecting DXMT versions, and installing Steam.
+
+Most features provided by the launcher can also be performed through the CLI in principle.
+However, the CLI requires users to understand environment variables, paths, and prefix structure, which raises the entry barrier.
+The launcher groups this process into a guided flow so users can quickly configure the basic environment needed to run games.
+
+## Wine
+
+Wine is a compatibility layer for running Windows programs on non-Windows operating systems such as Linux and macOS.
+It does not virtualize the entire Windows operating system; instead, it implements the APIs that Windows programs call in a form that other operating systems can handle.
+
+If you have played games on macOS or Linux, you may have heard the names Proton, CrossOver, and Wine.
+Proton and CrossOver can both be understood as Wine-based projects with patches and distribution methods added for their own goals.
+Proton focuses on Steam Deck and Steam Play, while CrossOver is a commercial Wine-based compatibility environment provided by CodeWeavers.
+
+The Bob-Ddong-Iri-Hoyo launcher also runs on top of this Wine ecosystem.
+However, its goal is not to run every Windows program, but to configure a runtime environment for specific games, so the provided Wine builds are adjusted for that goal.
+
+## Rosetta 2
+
+Rosetta 2 is Apple's translation technology that allows Apple Silicon Macs to run programs built for x86_64.
+It is not a full virtual machine in the usual sense; it is closer to a layer that translates x86_64 instructions into instructions executable on Apple Silicon.
+
+Rosetta 2 uses both AOT (Ahead Of Time) and JIT (Just In Time) translation.
+AOT translates some code before a program runs, while JIT translates needed code immediately during execution.
+This combination allows many x86_64 programs to run relatively naturally on Apple Silicon Macs.
+
+<Aside type="caution">
+Rosetta 2 is a macOS component provided by Apple.
+Therefore, it is not something this project can directly maintain or guarantee, and its behavior or availability may change depending on macOS versions and Apple policy.
+</Aside>
+
+## DXMT
+
+DXMT is a layer that translates Windows DirectX 11 graphics API calls into Apple's Metal API calls.
+Because macOS does not directly support DirectX, Windows game graphics commands must be converted into a form macOS can understand.
+
+If you have used CrossOver, you may have seen options such as DXMT, D3DMetal, and DXVK.
+They all make Windows game graphics calls executable on macOS, but their translation paths and goals differ.
+
+When using DXVK, DirectX 11 commands generally follow this path.
+
+```text
+DirectX 11 command -> Vulkan -> Metal
+```
+
+macOS does not provide Vulkan as a native graphics API, so Vulkan calls may need to be translated again into Metal.
+By contrast, DXMT and D3DMetal-style approaches aim to connect DirectX 11 commands more directly to Metal.
+
+```text
+DirectX 11 command -> Metal
+```
+
+DXMT and D3DMetal (GPTK) differ in public availability, implementation direction, and supported APIs.
+DXMT is an open source-oriented approach focused on DirectX 11, and the Eternal Return and HoYoverse games primarily targeted by Bob-Ddong-Iri-Hoyo also rely heavily on DirectX 11 execution paths.
+
+For this reason, the project combines Wine, Rosetta 2, and DXMT to configure a game runtime environment on macOS.
+Each component exists independently, but in practice they are connected within one execution path.

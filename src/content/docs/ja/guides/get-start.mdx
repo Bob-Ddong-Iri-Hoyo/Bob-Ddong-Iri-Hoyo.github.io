@@ -1,0 +1,87 @@
+---
+title: はじめに
+description: Bob-Ddong-Iri-Hoyo ランチャーを初めて使う人向けの案内です。
+---
+
+import { LinkCard, CardGrid, Card} from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+![インストール画面](../../../../assets/bobtongirihoyo_wide.png)
+
+## Bob-Ddong-Iri-Hoyo とは？
+
+Bob-Ddong-Iri-Hoyo は、macOS で Eternal Return と HoYoverse ゲームを実行するための Wine ランチャーです。
+内部では Wine ベースの実行環境を使用し、Apple Silicon Mac では Rosetta 2 や DXMT のような互換レイヤーがあわせて使われることがあります。
+
+ランチャーの目的は、複雑な Wine コマンドや設定ファイルを直接扱わなくても、ゲーム実行に必要な Bottle、Wine バージョン、グラフィック変換レイヤーを選択して管理できるようにすることです。
+Wine に詳しいユーザーは CLI 環境を直接使うこともできますが、一般的なユーザーはランチャーを通じて同じ作業をより簡単に行えます。
+
+## 特徴
+
+従来の CrossOver や Wine で Eternal Return を実行したときに発生しやすいレンダリング問題を解決します。
+<CardGrid>
+  <Card title="標準 Wine">
+![](../../../../assets/get-start/haze1.png)
+  </Card>
+
+  <Card title="Bob-Ddong-Iri-Hoyo Wine">
+  ![](../../../../assets/get-start/haze2.png)
+  </Card>
+</CardGrid>
+<CardGrid>
+  <Card title="標準 Wine">
+![](../../../../assets/get-start/felix1.png)
+  </Card>
+
+  <Card title="Bob-Ddong-Iri-Hoyo Wine">
+  ![](../../../../assets/get-start/felix2.png)
+  </Card>
+</CardGrid>
+<CardGrid>
+  <Card title="標準 Wine">
+![](../../../../assets/get-start/laura1.png)
+  </Card>
+
+  <Card title="Bob-Ddong-Iri-Hoyo Wine">
+  ![](../../../../assets/get-start/laura2.png)
+  </Card>
+</CardGrid>
+## ドキュメント構成
+
+このドキュメントは、次の流れで読むことを想定しています。
+
+- **インストール**: ランチャーをダウンロードし、macOS で実行できるように準備する手順を説明します。
+- **Wine について**: このプロジェクトが提供する Wine ビルドと対応範囲を説明します。
+- **ビルドを始める**: Wine と DXMT を自分でビルドする、または開発環境を理解したいユーザー向けの基準情報を整理します。
+- **リファレンス**: Wine、DXMT、Rosetta 2 がどのような役割を持つのか、背景知識を補足します。
+
+## 注意事項
+
+<Aside type="caution">
+本プロジェクトは、個人的な必要性から始まったプロジェクトです。
+
+バグ修正や機能追加は、開発者のスケジュール、優先順位、技術的な可能性に応じて進められます。
+要望された機能やゲーム対応が必ず反映されるとは限らず、特定のゲームがアップデートされると、それまで動作していた環境も変わる可能性があります。
+
+アプリの使用によって発生し得るデータ損失、アカウント問題、ゲーム実行エラー、利用規約上のリスクについては、ユーザー自身で判断する必要があります。
+特にオンラインゲームはクライアントの起動方式やセキュリティポリシーが変更されることがあるため、重要なアカウントで使う前にリスクを十分理解してください。
+</Aside>
+
+## ライセンス
+
+本プロジェクトは **MIT License** に従います。
+
+ライセンス全文と詳細条件は [LICENSE](https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher/blob/main/LICENSE) を参照してください。
+
+## プロジェクトリンク
+
+<CardGrid>
+  <LinkCard
+    title="Bob-Ddong-Iri-Hoyo Launcher GitHub"
+    href="https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher"
+  ></LinkCard>
+  <LinkCard
+    title="CrossOver Wine 26 GitHub"
+    href="https://github.com/Bob-Ddong-Iri-Hoyo/fullbodied-anca-wine-house"
+  ></LinkCard>
+</CardGrid>

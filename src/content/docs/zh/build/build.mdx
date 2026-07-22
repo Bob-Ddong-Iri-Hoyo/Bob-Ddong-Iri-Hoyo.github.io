@@ -1,0 +1,40 @@
+---
+title: 开始构建
+description: 说明构建 Wine 与 DXMT 所需的基准信息。
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## 构建基准
+
+<CardGrid>
+  <Card title="CrossOver Wine">
+    <p>Version: <code>26.1.0</code></p>
+  </Card>
+
+  <Card title="DXMT">
+    <p>Version: <code>0.80</code></p>
+  </Card>
+</CardGrid>
+
+本文档整理了 Bob-Ddong-Iri-Hoyo 启动器使用的 Wine 与 DXMT 组件的构建基准，适合想要自行构建或理解构建环境的用户参考。
+如果只是使用启动器，不需要按照本文档自行构建这些组件。
+
+## 交叉编译器配置
+
+构建过程中会使用两类用途不同的工具链。
+
+- Wine 构建需要用于生成 Windows 目标二进制文件的 `mingw` 工具链。
+- DXMT 构建需要用于构建 Metal 转换层的 `llvm` 系工具。
+
+Wine 使用的 `mingw` 工具链会通过单独准备好的 toolchain 下载后使用。
+DXMT 使用的 `llvm` 则以单独构建的方式为基准，以便与 DXMT 的构建流程保持一致。
+也可以把两者整合到一个公共工具链中，但当前文档会按照 DXMT 教程的流程，将 Wine 与 DXMT 的构建步骤分开说明。
+
+## 如何阅读构建文档
+
+本页并不会罗列完整的构建命令，而是重点说明每个组件为什么需要。
+实际构建脚本和详细命令，请同时参考相关仓库的 README 与构建文档。
+
+构建失败时，建议先确认正在使用的 Wine 版本、DXMT 版本、`mingw` 与 `llvm` 版本是否符合本文档的基准。
+兼容层项目非常依赖依赖项版本，即使是很小的版本差异，也可能导致构建错误或运行时问题。

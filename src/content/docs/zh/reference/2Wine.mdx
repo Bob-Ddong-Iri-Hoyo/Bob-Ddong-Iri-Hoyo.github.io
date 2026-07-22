@@ -1,0 +1,58 @@
+---
+title: Wine
+description: Wine 相关开发笔记与参考资料。
+---
+
+## Wine 历史
+
+<div align="center">
+![](../../../../assets/icon_2.png)
+</div>
+
+<div align="center">
+[History](https://gitlab.winehq.org/wine/wine/-/wikis/Wine-History)
+</div>
+
+Wine 是一个长期发展的兼容层，用于在非 Windows 环境中运行从旧版 Windows 程序到现代游戏的各种 Windows 应用。
+这个名字有时看起来像模拟器，但 Wine 的核心目标不是模拟完整的 Windows，而是直接实现 Windows API。
+
+## Wine 结构
+
+Wine 运行 Windows 程序的方式，可以理解为多个 DLL 和服务器进程协同工作的结构。
+Windows 程序会调用 `ntdll.dll`、`kernel32.dll`、`user32.dll`、`gdi32.dll` 等 Windows DLL。
+Wine 接收这些调用，并把它们连接到 Linux 或 macOS 提供的系统功能。
+
+其中一个核心组件是 `ntdll.dll`。
+从 Windows 程序的角度看，`ntdll.dll` 更接近底层系统调用和运行时行为。
+Wine 实现这一层时，会把文件、进程、线程、内存、同步对象等功能连接到宿主操作系统的功能。
+
+另一个重要组件是 `wineserver`。
+`wineserver` 负责管理多个 Windows 进程之间需要共享的状态。
+例如句柄、窗口、进程关系，以及某些需要在 Windows 程序之间保持一致的同步对象等信息，都包含在这里。
+
+[Wine 结构官方参考](https://gitlab.winehq.org/wine/wine/-/wikis/Wine-Developer's-Guide/Architecture-Overview)
+
+## Prefix 与 Bottle
+
+在 Wine 中，prefix 是一个像独立 Windows 环境一样工作的目录。
+其中保存虚拟 C 盘、注册表文件、已安装程序和用户设置。
+
+Bob-Ddong-Iri-Hoyo 启动器中所说的 Bottle，就是把这些 Wine prefix 以更容易理解的单位进行管理的概念。
+不同游戏可能需要不同设置或 Wine 版本，因此分离 Bottle 可以减少一个游戏的设置变化影响到其他游戏的情况。
+
+## 图形处理
+
+运行游戏时，仅靠 Wine 往往并不足够。
+尤其是基于 DirectX 的游戏，需要图形 API 转换层。
+Windows 游戏调用 DirectX 11 时，在 macOS 上必须将其转换为 Metal 才能绘制画面。
+
+本项目主要由 DXMT 负责这一角色。
+Wine 提供 Windows 程序运行环境，而 DXMT 则把其中发生的 DirectX 11 图形调用连接到 macOS 图形栈。
+
+## 在项目中的意义
+
+Bob-Ddong-Iri-Hoyo 的 Wine 构建与其说是面向所有 Windows 程序的通用发行版，不如说更接近于为特定游戏运行环境准备的自定义构建。
+它会优先考虑 Steam 启动、HoYoverse 游戏运行、DirectX 11 图形转换等需求。
+
+因此，其他程序也可能运行，但对于本项目主要支持对象之外的程序，可能出现兼容性问题。
+出现问题时，需要区分是 Wine 本身的问题、DXMT 的问题，还是游戏启动器或安全模块的问题。

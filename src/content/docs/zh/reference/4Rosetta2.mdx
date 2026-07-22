@@ -1,0 +1,44 @@
+---
+title: Rosetta 2
+description: Rosetta 2 相关参考资料。
+---
+
+import { Aside } from "@astrojs/starlight/components";
+
+## Rosetta 2
+
+<div align="center">
+![](../../../../assets/icon_4.png)
+</div>
+
+<div align="center">
+<div>
+[Apple's Rosetta Guide](https://support.apple.com/guide/security/secebb113be1/web)
+
+[Apple's TSO Guide](https://developer.apple.com/documentation/virtualization/accelerating-the-performance-of-rosetta)
+</div>
+</div>
+
+Rosetta 2 是 Apple 的转换技术，可以让 Apple Silicon Mac 运行面向 x86_64 制作的程序。
+在基于 Wine 的游戏运行环境中，x86_64 Windows 程序、Wine 组件和相关运行时可能会一起使用，因此 Rosetta 2 的作用可能会变得很重要。
+
+## 主要组成
+
+Rosetta 2 并不是由单一功能组成的技术，而是可以理解为多种转换方式和 CPU 行为模型修正共同工作的技术。
+
+- **JIT（Just In Time）**：在程序运行过程中，将所需的 x86_64 代码即时转换为 Apple Silicon 可执行代码。
+- **AOT（Ahead Of Time）**：在执行前预先转换一部分代码，减少重复执行时的负担。
+- **TSO（Total Store Ordering）**：与修正 x86 系列 CPU 假设的内存顺序模型和 Apple Silicon 行为差异有关。
+
+## 在项目中的角色
+
+在 Bob-Ddong-Iri-Hoyo 启动器的运行路径中，Wine、Windows 游戏、Steam 和图形转换层会一起工作。
+如果其中一部分组件以 x86_64 环境为前提，在 Apple Silicon Mac 上就需要 Rosetta 2 的帮助。
+
+Rosetta 2 并不是用户需要频繁手动调整的组件，但如果没有安装，某些可执行文件可能无法启动，或启动器内部操作可能失败。
+因此，在 Apple Silicon Mac 上使用启动器时，建议先确认安装指南中的 Rosetta 2 安装步骤。
+
+<Aside type="caution">
+Rosetta 2 是由 Apple 提供并管理的 macOS 组件。
+本项目无法直接为其打补丁或保证其行为，因此需要注意 macOS 更新后运行方式可能发生变化。
+</Aside>

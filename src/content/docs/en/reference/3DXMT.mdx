@@ -1,0 +1,43 @@
+---
+title: DXMT
+description: DXMT-related reference.
+---
+
+## DXMT
+
+<div align="center">
+![](../../../../assets/icon_3.png)
+</div>
+
+DXMT is a graphics translation layer used to run DirectX 11-based Windows games on macOS.
+Windows games commonly use Direct3D 11 and DXGI to handle graphics devices, swapchains, textures, shaders, and render targets.
+Because macOS does not provide DirectX, an intermediate layer is needed to translate these calls into Apple's Metal API.
+
+## Role
+
+DXMT's role is to translate DirectX 11 commands into Metal commands.
+From the game's perspective, it appears to run in a DirectX 11 environment; from macOS's perspective, it behaves like a program using Metal.
+
+This process is not a simple command substitution.
+DirectX and Metal differ in resource management, shader handling, synchronization models, and rendering pipeline representation, so DXMT must continuously reconcile the differences between the two APIs.
+
+## Difference from DXVK
+
+DXVK is a well-known project that translates DirectX 9/10/11 calls into Vulkan.
+On Linux, Vulkan can be used directly, which makes DXVK a very strong option.
+
+The situation is different on macOS.
+macOS does not provide Vulkan as a native API, so another layer is needed to translate Vulkan into Metal.
+In that case, the graphics call path becomes longer and it can be harder to trace where problems occur.
+
+DXMT aims for a more direct path from DirectX 11 to Metal.
+This is why Bob-Ddong-Iri-Hoyo is configured around DXMT.
+
+## Limitations
+
+Having DXMT does not mean every DirectX game will automatically run.
+Whether a game runs can depend on the DirectX features, shaders, anti-cheat system, or launcher structure it uses.
+Also, if a game update changes graphics options or rendering paths, settings that previously worked may no longer fit.
+
+This project prioritizes running Eternal Return and HoYoverse games.
+Even if DXMT works with another game, that does not mean the game is officially supported by this project.

@@ -1,0 +1,37 @@
+---
+title: About Wine
+description: The Wine builds provided by Bob-Ddong-Iri-Hoyo and their support scope.
+---
+
+## Provided Wine Builds
+
+The Wine builds provided by Bob-Ddong-Iri-Hoyo include a custom build based on CodeWeavers' [CrossOver](https://www.codeweavers.com/crossover/source) open source release and a custom build based on WineHQ 11.10.
+The CrossOver Wine version used as the baseline in this documentation is `26.1.0`.
+
+Wine is a compatibility layer that lets Windows programs run on macOS by translating Windows API calls into forms macOS can handle.
+Because it does not run a full Windows operating system like a virtual machine, compatibility and stability can vary by program.
+
+## DXMT-Centered Configuration
+
+This project's Wine configuration primarily targets Eternal Return and HoYoverse games that use DirectX 11.
+For that reason, the graphics translation layer is centered on DXMT.
+DXMT translates DirectX 11 commands into Apple Metal API calls so they can run on macOS.
+
+Approaches such as DXVK, which route through Vulkan, also exist, but macOS does not provide Vulkan as a native graphics API.
+That may require an additional layer to translate Vulkan back to Metal, so this project chooses a DXMT-centered setup based on the target games and the macOS environment.
+
+## Launcher and CLI
+
+Users who can work with Wine directly may find the CLI version more flexible.
+In a CLI environment, Wine prefixes, environment variables, and launch options can be controlled in detail.
+
+Users who are not familiar with Wine settings are usually better served by the launcher.
+The launcher provides repetitive tasks such as Bottle creation, Wine version selection, and DXMT version selection through a GUI, helping reduce configuration mistakes.
+
+## Code Customization
+
+The provided Wine builds include some patches for Steam launch issues and HoYoverse game launch issues.
+These patches are not intended to perfectly support every Windows program; they are changes applied for the game runtime environment targeted by this project.
+
+To make HoYoverse games run, this project references part of the code from [Dawn Winery](https://dawn.wine/dawn-winery).
+Those changes can directly affect Wine's internal behavior, so unexpected issues may occur in other games or general Windows programs.
