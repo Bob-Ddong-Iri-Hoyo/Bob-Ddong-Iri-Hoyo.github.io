@@ -3,19 +3,49 @@ title: 시작하기
 description: 밥똥이리호요 런처를 처음 사용하는 사람을 위한 안내입니다.
 ---
 
-import { LinkCard, CardGrid } from "@astrojs/starlight/components";
+import { LinkCard, CardGrid, Card} from "@astrojs/starlight/components";
 import { Aside } from "@astrojs/starlight/components";
 
 ![설치 화면](../../../assets/bobtongirihoyo_wide.png)
 
 ## 밥똥이리호요란?
 
-밥똥이리호요는 macOS에서 이터널 리턴과 HoYoverse 게임을 실행하기 위한 런처입니다.
+밥똥이리호요는 macOS에서 이터널 리턴과 HoYoverse 게임을 실행하기 위한 Wine 런처입니다.
 내부적으로는 Wine 기반 실행 환경을 사용하며, Apple Silicon Mac에서는 Rosetta 2와 DXMT 같은 호환 계층이 함께 사용될 수 있습니다.
 
 런처의 목적은 복잡한 Wine 명령어와 설정 파일을 직접 다루지 않아도 게임 실행에 필요한 Bottle, Wine 버전, 그래픽 변환 레이어를 선택하고 관리할 수 있게 하는 것입니다.
 따라서 Wine을 잘 아는 사용자는 CLI 환경을 직접 사용할 수도 있지만, 일반 사용자는 런처를 통해 같은 작업을 더 쉽게 수행할 수 있습니다.
 
+## 특징 
+
+기존의 크로스오버나 Wine에서 Eternal Return을 할 때 나타나는 고질적인 랜더링 문제를 해결합니다.
+<CardGrid>
+  <Card title="기본 와인">
+![](../../../assets/get-start/haze1.png)
+  </Card>
+
+  <Card title="밥똥이리호요 와인">
+  ![](../../../assets/get-start/haze2.png)
+  </Card>
+</CardGrid>
+<CardGrid>
+  <Card title="기본 와인">
+![](../../../assets/get-start/felix1.png)
+  </Card>
+
+  <Card title="밥똥이리호요 와인">
+  ![](../../../assets/get-start/felix2.png)
+  </Card>
+</CardGrid>
+<CardGrid>
+  <Card title="기본 와인">
+![](../../../assets/get-start/laura1.png)
+  </Card>
+
+  <Card title="밥똥이리호요 와인">
+  ![](../../../assets/get-start/laura2.png)
+  </Card>
+</CardGrid>
 ## 문서 구성
 
 이 문서는 다음과 같은 흐름으로 읽는 것을 기준으로 작성되어 있습니다.
