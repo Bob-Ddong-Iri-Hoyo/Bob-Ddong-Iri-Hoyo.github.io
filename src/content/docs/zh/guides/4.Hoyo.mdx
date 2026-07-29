@@ -1,0 +1,191 @@
+---
+title: HoYoverse 游戏安装与设置指南
+description: 说明 HoYoverse 游戏的安装和设置。
+slug: zh/guides/hoyo-guides
+sidebar:
+  order: 4
+---
+
+import { LinkCard } from "@astrojs/starlight/components";
+import { CardGrid, Card } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+import glitching from "../../../../assets/starrail/glitching.mp4";
+import fix from "../../../../assets/starrail/fix.mp4";
+import options from "../../../../assets/starrail/option.mp4";
+
+## 0. Wine 选择指南
+
+HoYoverse 游戏与 BDIH 提供的 winehq 系列 Wine 兼容。
+但不同版本之间可能存在细微的性能差异。
+
+<div className="version-row">
+  <Card
+    title="🔴 wine-crossover-26.1.0"
+  >
+  这是仅面向 Eternal Return 的 Wine。它只为 Eternal Return 做了补丁，因此不兼容 HoYoverse 游戏。
+  </Card>
+
+<Card title="🟢 wine-winehq-11.11">
+全球版 Honkai: Star Rail、Genshin Impact、Zenless Zone Zero 可以运行。
+</Card>
+  <Card
+    title="🟢 wine-winehq-11"
+  >
+  全球版 Honkai: Star Rail、Genshin Impact、Zenless Zone Zero 可以运行。
+  </Card>
+</div>
+
+## 1. HoyoPlay 安装指南
+
+### 基本安装
+
+<div align="center">
+![](../../../../assets/hoyoplay/1.png)
+</div>
+点击右下角的 + 按钮创建 Bottle。
+<div align="center">
+![](../../../../assets/hoyoplay/2.png)
+</div>
+在这里选择想使用的 Wine。DXMT、Jadeite 没有可选项，下载默认值即可。
+然后点击创建按钮生成 Bottle。
+<div align="center">
+![](../../../../assets/hoyoplay/3.png)
+</div>
+打开刚刚创建的 Bottle。
+<div align="center">
+![](../../../../assets/hoyoplay/4.png)
+</div>
+进入 Bottle 后，点击右下角的打开启动器安装列表，准备安装 HoyoPlay 启动器。
+<div align="center">
+![](../../../../assets/hoyoplay/5.png)
+</div>
+因为还没有启动器，所以先下载启动器。
+<Aside type="caution">
+直接运行是指从 HoyoPlay 网站直接下载 hoyoplayInstaller.exe 并运行。
+只有在下载或安装无法正常完成时才建议使用。
+如果用这个功能直接运行 HoyoPlay 安装器以外的程序，可能会产生意外结果，甚至导致该 Bottle 无法继续使用。
+如果不小心运行了错误程序，请删除 Bottle 并重新创建环境。
+</Aside>
+<div align="center">
+![](../../../../assets/hoyoplay/6.png)
+</div>
+下载完成后，点击安装按钮。
+<div align="center">
+![](../../../../assets/hoyoplay/7.png)
+</div>
+这是一个稍微需要等待的操作。等待一段时间后，HoyoPlay 安装窗口会如图打开。
+这里选择快速安装（Quick Installation），保持默认值并一路下一步完成安装。
+
+<div align="center">
+![](../../../../assets/hoyoplay/8.png)
+</div>
+如果安装正常完成，会自动弹出如下 HoyoPlay 启动器窗口。
+现在选择想玩的游戏，安装并运行即可。
+
+### 额外安装提示
+
+如果删除 Bottle，里面的游戏也会被删除。
+HoYoverse 游戏容量很大，重新安装会浪费大量时间。
+因此我们提供 G: Drive。
+安装在 G: Drive 中的游戏，只要用户不手动删除，就会永久保留。
+因此可以独立于 Bottle 的删除与否来管理游戏。
+
+G: Drive 可以在 `设置 > Wine` 中更改或管理保存位置。
+<div align="center">
+![](../../../../assets/Install/GDrive.png)
+<p>G: drive 设置窗口</p>
+</div>
+
+<div align="center">
+![](../../../../assets/hoyoplay/9.png)
+</div>
+把游戏安装到 G: Drive 的方法如下。点击想安装的游戏的安装按钮，然后点击更改安装位置的按钮。
+
+<div align="center">
+![](../../../../assets/hoyoplay/10.png)
+</div>
+选择 `MyComputer > G:`，并在其中使用适当的文件夹进行安装。
+这里无法直接创建文件夹，这似乎是 Wine 自身实现的问题。
+请进入设置，在该位置另行创建需要的文件夹。
+
+## 2. 设置指南
+
+### 1. HoyoPlay 设置指南
+
+只有将帧率设为 **60** fps，HoyoPlay 启动器动画才不会看起来撕裂。
+这个选项默认已开启，一般不需要特别在意。
+如果出现该问题，建议确认一次 `Launch 选项 > DXMT > Fps 限制` 是否为 **60** fps。
+
+### 2. Genshin Impact 设置指南
+
+Msync 选项可以根据用户选择开启或关闭。
+经验上差异并不明显，但如果感觉变慢，建议开启。
+
+### 3. Honkai: Star Rail 设置指南
+
+部分区域可能会出现闪烁的 glitch bug。
+如果出现这个问题，把光照质量改为中等或更低即可解决。
+
+<div align="center">
+<video
+  controls
+  autoplay
+  muted
+  loop
+  playsInline
+  width="100%"
+>
+  <source src={glitching} type="video/mp4" />
+</video>
+<p>Glitch bug 示例</p>
+</div>
+
+<div align="center">
+<video
+  controls
+  autoplay
+  muted
+  loop
+  playsInline
+  width="100%"
+>
+  <source src={options} type="video/mp4" />
+</video>
+<p>解决方法：将光照质量改为中等或更低</p>
+</div>
+
+<div align="center">
+<video
+  controls
+  autoplay
+  muted
+  loop
+  playsInline
+  width="100%"
+>
+  <source src={fix} type="video/mp4" />
+</video>
+<p>设置结果</p>
+</div>
+
+<div align="center">
+![](../../../../assets/starrail/option.png)
+</div>
+
+### 4. Zenless Zone Zero 设置指南
+
+建议开启 Msync。
+你可能会遇到非常明显的卡顿。
+推测原因是游戏大量使用动态加载，而 Msync 对这类问题有很大的性能提升帮助。
+
+如果游戏正在运行，请先关闭正在使用的游戏，然后按照下图设置。
+<div align="center">
+![](../../../../assets/zzz/msync1.png)
+</div>
+
+<div align="center">
+![](../../../../assets/zzz/msync2.png)
+</div>
+
+现在重新直接运行游戏即可。

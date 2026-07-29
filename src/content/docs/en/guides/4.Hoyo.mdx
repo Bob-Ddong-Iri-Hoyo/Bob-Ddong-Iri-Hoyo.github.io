@@ -1,0 +1,189 @@
+---
+title: HoYoverse Game Installation and Settings Guide
+description: Installation and settings for HoYoverse games.
+slug: en/guides/hoyo-guides
+sidebar:
+  order: 4
+---
+
+import { LinkCard } from "@astrojs/starlight/components";
+import { CardGrid, Card } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+import glitching from "../../../../assets/starrail/glitching.mp4";
+import fix from "../../../../assets/starrail/fix.mp4";
+import options from "../../../../assets/starrail/option.mp4";
+
+## 0. Wine Selection Guide
+
+HoYoverse games are compatible with the WineHQ-based Wine builds provided by BDIH.
+However, there may be small performance differences depending on the version you choose.
+
+<div className="version-row">
+  <Card
+    title="🔴 wine-crossover-26.1.0"
+  >
+  This Wine build is only for Eternal Return. It is patched specifically for Eternal Return, so it is not compatible with HoYoverse games.
+  </Card>
+
+<Card title="🟢 wine-winehq-11.11">
+Global versions of Honkai: Star Rail, Genshin Impact, and Zenless Zone Zero are compatible.
+</Card>
+  <Card
+    title="🟢 wine-winehq-11"
+  >
+  Global versions of Honkai: Star Rail, Genshin Impact, and Zenless Zone Zero are compatible.
+  </Card>
+</div>
+
+## 1. HoyoPlay Installation Guide
+
+### Basic Installation
+
+<div align="center">
+![](../../../../assets/hoyoplay/1.png)
+</div>
+Click the + button in the lower-right corner to create a Bottle.
+<div align="center">
+![](../../../../assets/hoyoplay/2.png)
+</div>
+Select the Wine build you want. DXMT and Jadeite have no alternatives, so download the defaults.
+Then click Create to create the Bottle.
+<div align="center">
+![](../../../../assets/hoyoplay/3.png)
+</div>
+Open the Bottle you just created.
+<div align="center">
+![](../../../../assets/hoyoplay/4.png)
+</div>
+Inside the Bottle, click the launcher installation menu in the lower-right corner to install the HoyoPlay launcher.
+<div align="center">
+![](../../../../assets/hoyoplay/5.png)
+</div>
+Because the launcher is not installed yet, download it first.
+<Aside type="caution">
+Direct execution means downloading hoyoplayInstaller.exe directly from the HoyoPlay site and running it manually.
+Use this only when download or installation does not work properly.
+If you use direct execution for a program other than the HoyoPlay installer, unintended results may occur and the Bottle may become unusable.
+If you accidentally ran the wrong program, delete the Bottle and create a new Bottle environment.
+</Aside>
+<div align="center">
+![](../../../../assets/hoyoplay/6.png)
+</div>
+When the download finishes, click the install button.
+<div align="center">
+![](../../../../assets/hoyoplay/7.png)
+</div>
+This takes a little time. After waiting, the HoyoPlay installer opens as shown.
+Choose Quick Installation and continue with the default options to finish installation.
+
+<div align="center">
+![](../../../../assets/hoyoplay/8.png)
+</div>
+If installation completed correctly, the HoyoPlay launcher window should open automatically.
+Choose the game you want, install it, and run it.
+
+### Additional Installation Tips
+
+If you delete a Bottle, the games inside it are deleted too.
+Because HoYoverse games are large, reinstalling them wastes a lot of time.
+For this reason, BDIH provides G: Drive.
+Games installed on G: Drive remain preserved unless you delete them yourself, so you can manage games independently from whether a Bottle is deleted.
+
+You can change or manage the G: Drive save location in `Settings > Wine`.
+<div align="center">
+![](../../../../assets/Install/GDrive.png)
+<p>G: drive settings window</p>
+</div>
+
+<div align="center">
+![](../../../../assets/hoyoplay/9.png)
+</div>
+To install a game on G: Drive, click the install button for the game you want and click the button to change the installation location.
+
+<div align="center">
+![](../../../../assets/hoyoplay/10.png)
+</div>
+Select `MyComputer > G:` and install the game there, creating an appropriate folder as needed.
+You cannot create the folder directly from this screen. This appears to be a Wine implementation issue, so create the needed folder separately at that location from settings.
+
+## 2. Settings Guide
+
+### 1. HoyoPlay Settings Guide
+
+The HoyoPlay launcher animation looks correct only when the frame rate is set to **60** fps.
+This option is enabled by default, so you usually do not need to worry about it.
+If the issue occurs, check whether `Launch Options > DXMT > FPS Limit` is set to **60** fps.
+
+### 2. Genshin Impact Settings Guide
+
+Msync can be enabled or disabled depending on your preference.
+In practice, it has not shown a large difference, but if the game feels slow, enabling it is recommended.
+
+### 3. Honkai: Star Rail Settings Guide
+
+Some areas may show a flashing glitch.
+If this happens, lower Lighting Quality to Medium or below to resolve it.
+
+<div align="center">
+<video
+  controls
+  autoplay
+  muted
+  loop
+  playsInline
+  width="100%"
+>
+  <source src={glitching} type="video/mp4" />
+</video>
+<p>Glitching bug example</p>
+</div>
+
+<div align="center">
+<video
+  controls
+  autoplay
+  muted
+  loop
+  playsInline
+  width="100%"
+>
+  <source src={options} type="video/mp4" />
+</video>
+<p>Fix: set Lighting Quality to Medium or below</p>
+</div>
+
+<div align="center">
+<video
+  controls
+  autoplay
+  muted
+  loop
+  playsInline
+  width="100%"
+>
+  <source src={fix} type="video/mp4" />
+</video>
+<p>Result after changing the setting</p>
+</div>
+
+<div align="center">
+![](../../../../assets/starrail/option.png)
+</div>
+
+### 4. Zenless Zone Zero Settings Guide
+
+Enabling Msync is recommended.
+You may experience very heavy stuttering.
+This is likely because the game uses a lot of dynamic loading, and Msync can help significantly with this kind of issue.
+
+If the game is running, quit the games currently in use and configure the settings as shown below.
+<div align="center">
+![](../../../../assets/zzz/msync1.png)
+</div>
+
+<div align="center">
+![](../../../../assets/zzz/msync2.png)
+</div>
+
+Now launch the game directly again.

@@ -1,0 +1,67 @@
+---
+title: Drive 設定の詳細
+description: ドライブ設定について説明します。
+slug: ja/guides/drive-guides
+sidebar:
+  order: 5
+---
+
+import { LinkCard } from "@astrojs/starlight/components";
+import { CardGrid } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+## Wine Drive の理解
+
+すべての Windows プログラムは、パスを Windows のパスとして理解します。
+簡単な例では、`C:myapp/some.exe` のようなパスを期待します。
+しかし macOS のパスはこの形式ではなく、`/Users/myID/some.app` のような Unix/Linux スタイルのパスを使います。
+ユーザーが意識しなくても、少なくとも Wine は Windows プログラムが理解できるパスを提供する必要があります。
+
+## C: Drive
+
+Wine は Windows アプリのために、このパスを macOS のパスへマッピングします。
+簡単な例では、`/User/MyID/WinePrefix -> C:/` のようなマッピングです。
+
+ここで C: は Windows の C ドライブを意味します。
+C ドライブは、Wine が指定する macOS Path の別名として見ることができます。
+ただし C ドライブだけでは、特定のパス内部だけを見ることができます。
+
+```text
+C:/Program Files/
+C:/Users/
+.
+.
+.
+```
+
+外部にある他の macOS フォルダやプログラムにはアクセスできません。
+つまり、マッピングされた `C:/` の内部だけを使えます。
+
+## Z: Drive
+
+Z: は macOS の Root、つまり最上位パス `/` を意味する別名です。
+C ドライブがマッピングされたパス内部を扱うものだとすれば、Z ドライブは macOS システム外部のパスを表せます。
+
+そのため Z: は、外部パスにある Windows アプリを実行したり、複数の Prefix で共有するアプリを管理したりする場合に便利です。
+ただし Z ドライブは最上位パスを意味するため、外部のフルパスを毎回指定するのはかなり面倒です。
+
+## G: Drive
+
+そこで BDIH Launcher は、すべての Bottle が共有して使え、ユーザーがパス自体を指定できる G Drive (G:) という追加パスを提供します。
+これにより、ユーザーは外部の任意のパスを使いながら、毎回フルパスを指定する必要をなくせます。
+
+G Drive (G:) は設定の Wine 項目で確認できます。
+複数の Bottle は、この G: Drive を通じてゲームを簡単に保存し共有できます。
+<div align="center">
+![](../../../../assets/Install/GDrive.png)
+</div>
+
+<Aside type="tip">
+画像のように、G: Drive をゲームの保存場所に設定します。
+そしてランチャー以外のゲームをこの場所にインストールしてください。
+</Aside>
+
+<Aside type="caution">
+G: のパスを設定するには、すべての Bottle の実行を停止してから行う必要があります。
+すでに実行中の Bottle は、新しく指定した G: Drive を認識できない場合があります。
+</Aside>

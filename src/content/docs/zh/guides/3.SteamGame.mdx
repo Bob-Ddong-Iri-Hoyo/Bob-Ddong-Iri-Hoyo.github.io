@@ -1,0 +1,167 @@
+---
+title: Steam（Eternal Return）游戏安装与设置指南
+description: 说明 Eternal Return 的安装和设置。
+slug: zh/guides/steam-guides
+sidebar:
+  order: 3
+---
+
+import { LinkCard } from "@astrojs/starlight/components";
+import { CardGrid, Card } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+## 0. Wine 选择指南
+
+Eternal Return 与 BDIH 提供的所有 Wine 构建兼容。
+但不同版本之间可能存在细微的性能差异。
+<div className="version-row">
+  <Card
+    title="🟢 wine-crossover-26.1.0"
+  >
+  这是仅面向 Eternal Return 的 Wine。它只为 Eternal Return 做了补丁。
+  </Card>
+
+<Card title="🟡 wine-winehq-11.11">
+  Eternal Return 可以运行，但可能比其他 Wine 更慢。
+  这似乎与 Wine 内部 timer 相关变更有关，导致同样的动作产生更多调用。
+  如果可以，建议先尝试其他 Wine；也可以用它来测试是否足够适合自己的系统。
+</Card>
+  <Card
+    title="🟢 wine-winehq-11"
+  >
+  这是保证 Eternal Return 可以运行的 Wine。与 wine-crossover-26.1.0 不同，它是也能运行 HoYoverse 游戏的通用 Wine。
+  </Card>
+</div>
+
+## 1. 创建并设置 Bottle
+
+启动应用并完成初始加载后，会显示 Bottle 列表画面。
+Bottle 指 Wine 使用的独立运行环境，Windows 程序及相关设置会被分离保存在这个空间中。
+
+<div align="center">
+![](../../../../assets/Install/2.png)
+</div>
+要创建新的 Bottle，请点击右下角的 **+** 按钮，然后选择要使用的 Wine 版本和 DXMT 版本。
+如果某个游戏有推荐组合，请优先使用该组合；只有在出现问题时再切换到其他版本。
+<div align="center">
+![](../../../../assets/Install/3.png)
+</div>
+<Aside type="tip">
+Eternal Return 推荐使用 Wine11 或 wine-crossover-26.1.0。
+
+HoYoverse 游戏目前只可使用 Wine 11、Wine 11.11。
+</Aside>
+<div align="center">
+![](../../../../assets/Install/5.png)
+</div>
+Bottle 已创建完成。
+
+## 2. 下载并安装 Steam
+
+<div align="center">
+![](../../../../assets/Install/6.png)
+</div>
+点击 Bottle 后，会进入如下画面。
+
+<div align="center">
+![](../../../../assets/Install/7.png)
+</div>
+点击打开启动器安装列表后，会显示 Steam、HoyoPlay 等安装项。请选择需要的程序并下载。
+<Aside type="caution">
+直接运行是指从 Steam 网站直接下载 SteamSetup.exe 并运行。
+只有在下载或安装无法正常完成时才建议使用。
+如果用这个功能直接运行 SteamSetup.exe 以外的程序，可能会产生意外结果，甚至导致该 Bottle 无法继续使用。
+如果不小心运行了错误程序，请删除 Bottle 并重新创建环境。
+</Aside>
+
+<div align="center">
+![](../../../../assets/Install/8.png)
+</div>
+下载完成后，下载按钮会变为安装按钮。
+<div align="center">
+![](../../../../assets/Install/9.png)
+</div>
+点击安装并稍等片刻。
+<div align="center">
+![](../../../../assets/Install/10.png)
+</div>
+<div align="center">
+![](../../../../assets/Install/11.png)
+</div>
+Steam 安装器启动后，点击下一步并继续安装。
+<div align="center">
+![](../../../../assets/Install/12.png)
+</div>
+安装位置保持默认值即可。
+<div align="center">
+![](../../../../assets/Install/13.png)
+</div>
+安装完成后，会显示 Steam 登录画面。
+
+<div align="center">
+![](../../../../assets/Install/steam1.png)
+</div>
+
+现在登录 Steam，像在 Windows 上一样安装 Eternal Return 并游玩即可。
+
+### 额外安装提示
+
+<div align="center">
+![](../../../../assets/Install/steam1.png)
+</div>
+Bob-Ddong-Iri-Hoyo 启动器提供用于保存大型游戏的 **G: drive** 接口。
+你可以在 Steam 设置中通过添加驱动器来加入 **G: drive**，并把 Steam 游戏移动到该位置。
+这样即使删除现有 Bottle，也不需要重新下载已经保存好的 Steam 游戏。
+<div align="center">
+![](../../../../assets/Install/steam2.png)
+</div>
+在 Steam 设置的 storage 中，通过 Add drive 添加 G: drive。
+<div align="center">
+![](../../../../assets/Install/steam3.png)
+</div>
+
+G: Drive 的位置可以在 Bob-Ddong-Iri-Hoyo 启动器设置中调整。
+你可以指定自己想要的位置，也可以使用默认提供的路径。
+<div align="center">
+![](../../../../assets/Install/GDrive.png)
+</div>
+
+<Aside type="tip">
+如果启动 Eternal Return 时出现黑屏，可以按 ESC 解决。
+这是每个赛季首次启动时出现的动画，但 Wine 目前无法渲染这一部分，导致一直等待。
+按 ESC 取消后会直接进入主画面。
+</Aside>
+<Aside type="caution">
+首次运行时可能会出现一些卡顿。
+这是 DXMT 或 Rosetta 2 进行缓存时产生的自然现象。
+缓存完成后，这种现象之后会消失。
+因此，如果是第一次运行 Eternal Return，不建议从第一局就直接进行排位赛。
+</Aside>
+
+## 3. 高级设置
+
+Msync 可以根据用户判断开启或关闭。
+它可能有助于提升性能。
+
+首次安装 Steam 后，Msync 默认并不会开启，需要手动打开。
+Msync 选项需要判断应该给 Steam 还是 Eternal Return，这取决于最先启动的 Wine 是哪个程序。
+如果你是先启动 Steam 应用再启动 Eternal Return，就应该给 Steam 设置 Msync 选项。
+如果是在 Bottle 中直接启动 Eternal Return，就应该直接给 Eternal Return 设置。
+
+如果你不确定，但想开启 Msync，那么直接给两个应用都设置 Msync 即可。
+
+右键点击想要启用 Msync 的应用，进入 Launch 选项。
+<div align="center">
+![](../../../../assets/steamOption/msync2.png)
+</div>
+进入 Eternal Return 的 Launch 选项。
+<div align="center">
+![](../../../../assets/steamOption/msync3.png)
+</div>
+在 General 中选择启用 Msync 并保存。
+<div align="center">
+![](../../../../assets/steamOption/msync1.png)
+</div>
+如前所述，也进入 Steam 的 Launch 选项并应用相同设置。
+
+如果 Bottle 中的 Steam 或 Eternal Return 已经在运行，必须重启后这个选项变更才会生效。

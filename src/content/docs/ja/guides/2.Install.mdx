@@ -1,0 +1,129 @@
+---
+title: インストール
+description: Bob-Ddong-Iri-Hoyo ランチャーのインストールと初期設定手順を説明します。
+slug: ja/guides/install
+sidebar:
+  order: 2
+---
+
+import { LinkCard } from "@astrojs/starlight/components";
+import { CardGrid,Card } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+## ランチャーのダウンロード
+
+Bob-Ddong-Iri-Hoyo ランチャーは GitHub Releases ページで DMG ファイルとして配布されます。
+通常は一番上に表示されている最新リリースを選び、`.dmg` または `.zip` ファイルをダウンロードします。
+
+## バージョンの種類
+
+アプリは安定性と更新頻度に応じて 3 つのバージョンで提供されます。
+<CardGrid>
+  <LinkCard
+    title="🟢 Stable"
+    description="正式版とベータリリースを提供する基本チャンネルです。ほとんどのユーザーにおすすめです。"
+    href="https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher/releases"
+  />
+
+  <LinkCard
+    title="🟡 Staging"
+    description="Stable Beta と正式 Stable のリリース前に最終検証するチャンネルです。"
+    href="https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher-TestProduction/releases"
+  />
+
+  <LinkCard
+    title="🔴 Nightly"
+    description="最新の開発変更が自動ビルドされる実験チャンネルです。"
+    href="https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher-nightly/releases"
+  />
+</CardGrid>
+<Aside type="tip" title="どのバージョンをインストールすべきですか？">
+  特別な理由がなければ **Stable 版** をインストールしてください。  
+  Staging と Nightly はテスト目的のバージョンです。
+</Aside>
+
+## インストールガイド
+
+以下の手順は、ダウンロードした DMG ファイルを前提に説明します。
+パスの例は、ユーザーのダウンロード場所と実際のファイル名に合わせて置き換えてください。
+
+### 1. Rosetta 2 をインストールする
+
+<Aside type="note">
+Apple Silicon Mac で x86_64 ベースの構成要素を実行するには、Rosetta 2 が必要になる場合があります。
+すでに Rosetta 2 がインストールされている場合は、この手順をスキップできます。
+</Aside>
+
+```zsh
+softwareupdate --install-rosetta --agree-to-license
+```
+
+Terminal を開いてコマンドを実行すると、macOS が Rosetta 2 のインストールを進めます。
+すでにインストール済みの環境では、特に変化なく終了することがあります。
+
+### 2. Quarantine Tag を削除する
+
+<Aside type="caution">
+本プロジェクトの配布ファイルは、Apple 開発者署名や公証が適用されていないビルドである場合があります。
+その状態で実行すると、macOS Gatekeeper がアプリの起動をブロックしたり、壊れたアプリのように表示したりすることがあります。
+</Aside>
+<div align="center">
+![](../../../../assets/removeAppleQuarantine.png)
+</div>
+macOS はインターネットからダウンロードしたファイルに quarantine タグを付与します。
+このタグはセキュリティ確認に使われますが、個人プロジェクトの未公証アプリでは起動を妨げる原因になることがあります。
+Terminal や iTerm などのターミナルを開き、次のコマンドでダウンロードした DMG ファイルの quarantine タグを削除します。
+
+```zsh
+xattr -d com.apple.quarantine {保存場所}/{ダウンロードしたファイル名}.(dmg|zip|app)
+```
+
+たとえばファイルがダウンロードフォルダにある場合、`{保存場所}` は `~/Downloads` に置き換えます。
+コマンド実行中に `No such xattr` のようなメッセージが表示された場合、そのファイルには削除する quarantine タグがないという意味です。
+
+### 3. ランチャーをインストールする
+
+quarantine タグを削除したら、Finder でダウンロードした DMG ファイルをダブルクリックします。
+DMG がマウントされたら、案内に従ってランチャーアプリを `Applications` フォルダへ移動するか、配布ファイルが提供するインストール方式に従ってください。
+
+初回起動時に macOS がもう一度確認メッセージを表示することがあります。
+その場合は、システム設定のプライバシーとセキュリティ項目で実行を許可するか、Finder でアプリを Control-クリックして開くを選択すると起動できます。
+
+## アプリ設定とゲームインストール
+<div align="center">
+![](../../../../assets/Install/1.png)
+</div>
+アプリを起動し、初期読み込みが終わると Bottle 一覧画面が表示されます。
+Bottle は Wine が使用する独立した実行環境で、Windows プログラムと関連設定はこの空間の中に分離して保存されます。
+<div align="center">
+![](../../../../assets/Install/2.png)
+</div>
+新しい Bottle を作るには、右下の **+** ボタンを押して、使用する Wine バージョンと DXMT バージョンを選択します。
+特定のゲームに合う組み合わせがある場合は、その組み合わせを優先し、問題がある場合だけ別のバージョンへ変更するのがおすすめです。
+<div align="center">
+![](../../../../assets/Install/3.png)
+</div>
+<Aside type="tip">
+Eternal Return では Wine11 または wine-crossover-26.1.0 の使用をおすすめします。
+
+HoYoverse ゲームの場合、Wine 11、Wine 11.11 のみ動作します。
+</Aside>
+
+<Aside type="caution">
+すべてのゲームは、初回起動時に多少のスタッターが発生することがあります。
+これは DXMT や Rosetta 2 がキャッシュを行う過程で起きる自然な現象です。
+キャッシュが完了すると、その後この現象は解消されます。
+そのため Eternal Return を初めて起動した場合、最初の試合からランク戦を行うことはおすすめしません。
+</Aside>
+
+<Aside type="tip">
+Bob-Ddong-Iri-Hoyo ランチャーは、Eternal Return と HoYoverse ゲームの実行を主な目的としています。
+その他すべての Steam ゲームについて、実行成功や安定性を保証するものではありません。
+
+対応対象ではないゲームで問題が発生することは、意図されたサポート範囲外の動作です。
+問題を報告する前に、そのゲームがプロジェクトの対応対象かどうかを先に確認してください。
+</Aside>
+
+<div align="center">
+![](../../../../assets/icon_1.png)
+</div>

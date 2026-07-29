@@ -1,0 +1,167 @@
+---
+title: Steam (Eternal Return) Game Installation and Settings Guide
+description: Installation and settings for Eternal Return.
+slug: en/guides/steam-guides
+sidebar:
+  order: 3
+---
+
+import { LinkCard } from "@astrojs/starlight/components";
+import { CardGrid, Card } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+## 0. Wine Selection Guide
+
+Eternal Return is compatible with every Wine build provided by BDIH.
+However, there may be small performance differences depending on the version you choose.
+<div className="version-row">
+  <Card
+    title="🟢 wine-crossover-26.1.0"
+  >
+  This Wine build is only for Eternal Return. It is patched specifically for Eternal Return.
+  </Card>
+
+<Card title="🟡 wine-winehq-11.11">
+  Eternal Return is guaranteed to run, but it may be slower than other Wine builds.
+  This appears to be related to timer changes inside Wine, which can cause more calls for the same behavior.
+  If possible, try another Wine build first, and use this version to test whether it fits your system well.
+</Card>
+  <Card
+    title="🟢 wine-winehq-11"
+  >
+  This Wine build is guaranteed to run Eternal Return. Unlike wine-crossover-26.1.0, it is a more general-purpose Wine build that can also run HoYoverse games.
+  </Card>
+</div>
+
+## 1. Create and Configure a Bottle
+
+After launching the app and waiting for the initial loading to finish, the Bottle list screen appears.
+A Bottle is an isolated runtime environment used by Wine, where Windows programs and their related settings are stored separately.
+
+<div align="center">
+![](../../../../assets/Install/2.png)
+</div>
+To create a new Bottle, click the **+** button in the lower-right corner, then choose the Wine version and DXMT version to use.
+If there is a recommended combination for a specific game, use that first and only switch versions when problems occur.
+<div align="center">
+![](../../../../assets/Install/3.png)
+</div>
+<Aside type="tip">
+For Eternal Return, Wine11 or wine-crossover-26.1.0 is recommended.
+
+For HoYoverse games, only Wine 11 and Wine 11.11 work.
+</Aside>
+<div align="center">
+![](../../../../assets/Install/5.png)
+</div>
+The Bottle has been created.
+
+## 2. Download and Install Steam
+
+<div align="center">
+![](../../../../assets/Install/6.png)
+</div>
+Click the Bottle to open the following screen.
+
+<div align="center">
+![](../../../../assets/Install/7.png)
+</div>
+Click the launcher installation menu to see the Steam and HoyoPlay installation list. Download the program you want.
+<Aside type="caution">
+Direct execution means downloading SteamSetup.exe directly from the Steam website and running it manually.
+Use this only when download or installation does not work properly.
+If you use direct execution for a program other than SteamSetup.exe, unintended results may occur and the Bottle may become unusable.
+If you accidentally ran the wrong program, delete the Bottle and create a new Bottle environment.
+</Aside>
+
+<div align="center">
+![](../../../../assets/Install/8.png)
+</div>
+When the download finishes, the download button changes into an install button.
+<div align="center">
+![](../../../../assets/Install/9.png)
+</div>
+Click install and wait for a moment.
+<div align="center">
+![](../../../../assets/Install/10.png)
+</div>
+<div align="center">
+![](../../../../assets/Install/11.png)
+</div>
+When the Steam installer opens, click Next and proceed with the installation.
+<div align="center">
+![](../../../../assets/Install/12.png)
+</div>
+You can keep the default installation location.
+<div align="center">
+![](../../../../assets/Install/13.png)
+</div>
+After installation completes, the Steam login screen appears.
+
+<div align="center">
+![](../../../../assets/Install/steam1.png)
+</div>
+
+Now log in, install Eternal Return just as you would on Windows, and play.
+
+### Additional Installation Tips
+
+<div align="center">
+![](../../../../assets/Install/steam1.png)
+</div>
+The Bob-Ddong-Iri-Hoyo launcher provides a **G: drive** interface for storing large games.
+In Steam settings, you can add the **G: drive** through Add drive and move your Steam games there.
+This lets you keep downloaded Steam games even if you delete an existing Bottle.
+<div align="center">
+![](../../../../assets/Install/steam2.png)
+</div>
+In Steam settings, add the G: drive from storage using Add drive.
+<div align="center">
+![](../../../../assets/Install/steam3.png)
+</div>
+
+You can adjust the G: Drive location in the Bob-Ddong-Iri-Hoyo launcher settings.
+Choose your preferred location or use the default path provided by the launcher.
+<div align="center">
+![](../../../../assets/Install/GDrive.png)
+</div>
+
+<Aside type="tip">
+If Eternal Return starts with a black screen, press ESC to resolve it.
+This is the seasonal first-launch animation, but Wine currently cannot render that section, so it waits indefinitely.
+Pressing ESC cancels it and moves directly to the main screen.
+</Aside>
+<Aside type="caution">
+Some stuttering may occur on the first launch.
+This is a natural result of DXMT or Rosetta 2 building caches.
+After caching is complete, the stuttering should disappear.
+For that reason, if you are launching Eternal Return for the first time, starting with ranked play immediately is not recommended.
+</Aside>
+
+## 3. Advanced Settings
+
+Msync can be enabled or disabled at your discretion.
+It may help improve performance.
+
+After the first Steam installation, Msync is not enabled by default. You must enable it manually.
+For Msync options, you need to decide whether to apply them to Steam or Eternal Return, and the first Wine process that starts matters.
+If you launch Eternal Return after opening the Steam app, apply the Msync option to Steam.
+If you launch Eternal Return directly from the Bottle, apply it directly to Eternal Return.
+
+If you are unsure and simply want to enable Msync, apply the Msync option to both apps.
+
+Right-click the app where you want to use Msync and open Launch options.
+<div align="center">
+![](../../../../assets/steamOption/msync2.png)
+</div>
+Open the Launch options for Eternal Return.
+<div align="center">
+![](../../../../assets/steamOption/msync3.png)
+</div>
+Select Enable Msync under General and save.
+<div align="center">
+![](../../../../assets/steamOption/msync1.png)
+</div>
+As mentioned earlier, open Steam's Launch options too and apply the same option.
+
+This option change only takes effect after restarting Steam or Eternal Return if they are already running in the Bottle.

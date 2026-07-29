@@ -1,0 +1,191 @@
+---
+title: HoYoverse ゲームのインストールと設定ガイド
+description: HoYoverse ゲームのインストールと設定について説明します。
+slug: ja/guides/hoyo-guides
+sidebar:
+  order: 4
+---
+
+import { LinkCard } from "@astrojs/starlight/components";
+import { CardGrid, Card } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+import glitching from "../../../../assets/starrail/glitching.mp4";
+import fix from "../../../../assets/starrail/fix.mp4";
+import options from "../../../../assets/starrail/option.mp4";
+
+## 0. Wine 選択ガイド
+
+HoYoverse ゲームは、BDIH が提供する winehq 系の Wine と互換性があります。
+ただし、選択するバージョンごとに性能差がわずかに出ることがあります。
+
+<div className="version-row">
+  <Card
+    title="🔴 wine-crossover-26.1.0"
+  >
+  Eternal Return 専用の Wine です。Eternal Return のためだけにパッチされているため、HoYoverse ゲームとは互換性がありません。
+  </Card>
+
+<Card title="🟢 wine-winehq-11.11">
+HoYoverse ゲーム global 版の Honkai: Star Rail、Genshin Impact、Zenless Zone Zero と互換性があります。
+</Card>
+  <Card
+    title="🟢 wine-winehq-11"
+  >
+  HoYoverse ゲーム global 版の Honkai: Star Rail、Genshin Impact、Zenless Zone Zero と互換性があります。
+  </Card>
+</div>
+
+## 1. HoyoPlay インストールガイド
+
+### 基本的なインストール
+
+<div align="center">
+![](../../../../assets/hoyoplay/1.png)
+</div>
+右下の + ボタンを押して Bottle を作成します。
+<div align="center">
+![](../../../../assets/hoyoplay/2.png)
+</div>
+ここで使いたい Wine を選択します。DXMT と Jadeite は選択肢がないため、デフォルト値をダウンロードします。
+そして作成ボタンを押して Bottle を作成します。
+<div align="center">
+![](../../../../assets/hoyoplay/3.png)
+</div>
+作成した Bottle を開きます。
+<div align="center">
+![](../../../../assets/hoyoplay/4.png)
+</div>
+Bottle に入ったら、右下のランチャーインストールを開き、HoyoPlay ランチャーをインストールします。
+<div align="center">
+![](../../../../assets/hoyoplay/5.png)
+</div>
+まだランチャーがないため、ランチャーをダウンロードします。
+<Aside type="caution">
+直接実行は、HoyoPlay サイトから hoyoplayInstaller.exe を直接ダウンロードして実行する機能です。
+ダウンロードやインストールが正常に動作しない場合だけ使用することをおすすめします。
+HoyoPlay インストーラー以外のプログラムをこれで直接実行すると、意図しない結果が発生することがあり、その Bottle が使えなくなる場合があります。
+誤って間違ったものを実行した場合は、Bottle を削除して新しく Bottle 環境を作り直してください。
+</Aside>
+<div align="center">
+![](../../../../assets/hoyoplay/6.png)
+</div>
+ダウンロードが完了したら、インストールボタンを押します。
+<div align="center">
+![](../../../../assets/hoyoplay/7.png)
+</div>
+少し時間がかかる作業です。待っていると、画像のように HoyoPlay インストール画面が開きます。
+ここではクイックインストール（Quick Installation）を選択し、デフォルト値のまま次へ進んでインストールを完了します。
+
+<div align="center">
+![](../../../../assets/hoyoplay/8.png)
+</div>
+正しくインストールできていれば、次のような HoyoPlay ランチャー画面が自動で開きます。
+あとは好きなゲームを選んでインストールし、実行してください。
+
+### 追加のインストール Tips
+
+Bottle を削除すると、その中のゲームも削除されます。
+容量の大きい HoYoverse ゲームを再インストールするのは非常に時間の無駄です。
+そのため、BDIH は G: Drive を提供しています。
+G: Drive にインストールしたゲームは、ユーザーが直接削除しない限り保持されます。
+したがって Bottle の削除有無とは別にゲームを管理できます。
+
+G: Drive は `設定 > Wine` で保存場所を変更または管理できます。
+<div align="center">
+![](../../../../assets/Install/GDrive.png)
+<p>G: drive 設定画面</p>
+</div>
+
+<div align="center">
+![](../../../../assets/hoyoplay/9.png)
+</div>
+ゲームを G: Drive にインストールする方法は次のとおりです。インストールしたいゲームのインストールボタンを押し、インストール場所を変更するボタンを押します。
+
+<div align="center">
+![](../../../../assets/hoyoplay/10.png)
+</div>
+`MyComputer > G:` を選択し、その中に適切なフォルダを用意してインストールします。
+ここではフォルダを直接作成できません。これは Wine 側の実装問題のようです。
+設定に入り、その場所に必要なフォルダを別途作成してください。
+
+## 2. 設定ガイド
+
+### 1. HoyoPlay 設定ガイド
+
+**60** fps に合わせることで、HoyoPlay ランチャーのアニメーションが裂けて見えなくなります。
+基本的にこのオプションは有効になっているため、あまり気にしなくても大丈夫です。
+もしこの問題が発生した場合は、`Launch オプション > DXMT > Fps 制限` が **60** fps になっているか一度確認することをおすすめします。
+
+### 2. Genshin Impact 設定ガイド
+
+Msync オプションはユーザーの選択でオンまたはオフにできます。
+経験上、大きな差は見られませんでしたが、遅いと感じる場合はオンにすることをおすすめします。
+
+### 3. Honkai: Star Rail 設定ガイド
+
+一部の地域で点滅する glitch bug が発生することがあります。
+この問題が発生した場合は、照明品質を中以下に変更すると解決します。
+
+<div align="center">
+<video
+  controls
+  autoplay
+  muted
+  loop
+  playsInline
+  width="100%"
+>
+  <source src={glitching} type="video/mp4" />
+</video>
+<p>Glitch bug の例</p>
+</div>
+
+<div align="center">
+<video
+  controls
+  autoplay
+  muted
+  loop
+  playsInline
+  width="100%"
+>
+  <source src={options} type="video/mp4" />
+</video>
+<p>解決策: 照明品質を中以下に変更</p>
+</div>
+
+<div align="center">
+<video
+  controls
+  autoplay
+  muted
+  loop
+  playsInline
+  width="100%"
+>
+  <source src={fix} type="video/mp4" />
+</video>
+<p>設定後の結果</p>
+</div>
+
+<div align="center">
+![](../../../../assets/starrail/option.png)
+</div>
+
+### 4. Zenless Zone Zero 設定ガイド
+
+Msync を有効にすることをおすすめします。
+非常に大きなスタッターを経験する場合があります。
+これは推測ですが、動的ロードを多用しているためだと思われます。このような問題では、Msync が速度向上に大きく役立ちます。
+
+ゲームを起動中の場合は、現在使用しているゲームを終了し、下の画像のように設定します。
+<div align="center">
+![](../../../../assets/zzz/msync1.png)
+</div>
+
+<div align="center">
+![](../../../../assets/zzz/msync2.png)
+</div>
+
+あとはゲームをもう一度直接実行してください。

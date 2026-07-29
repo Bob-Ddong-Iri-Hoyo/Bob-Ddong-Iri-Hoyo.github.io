@@ -1,0 +1,172 @@
+---
+title: 스팀(이터널리턴) 게임 설치, 설정 가이드
+description: 이터널리턴 설치와 설정에 대해 설명
+slug: guides/steam-guides
+sidebar:
+  order: 3
+---
+
+import { LinkCard } from "@astrojs/starlight/components";
+import { CardGrid, Card } from "@astrojs/starlight/components";
+import { Aside } from "@astrojs/starlight/components";
+
+## 0. 와인 선택 가이드
+이터널리턴은 BDIH에서 제공하는 모든 와인이 호환됩니다. 하지만 선택하는 버전마다 성능에 미세한 차이가 존재할 수 있습니다.
+<div className="version-row">
+  <Card
+    title="🟢 wine-crossover-26.1.0"
+  >
+  오직 이터널리턴만을 위한 와인입니다. 이터널 리턴만을 위해 패치되어 있습니다.
+  </Card>
+
+<Card title="🟡 wine-winehq-11.11">
+  이터널리턴 동작이 보장되지만, 다른 와인에 비해 느릴 수 있음. 이거는 와인 내의 timer관련해서 변경사항이 있었고
+  이로 인해서 같은 동작에 더 많은 호출이 일어나는 것으로 보입니다. 가능하다면 다른 와인을 써보는 것을 추천하며, 자신의 시스템에
+  충분히 맞는 와인인지 테스트하기 위해 사용하는 것을 권장합니다.
+
+</Card>
+  <Card
+    title="🟢 wine-winehq-11"
+  >
+  이터널 리턴 동작이 보장되는 와인입니다. wine-crossover-26.1.0과 달리 호요버스 게임도 같이 동작시킬 수 있는 범용적인 wine입니다.
+  </Card>
+</div>
+
+## 1. Bottle 생성 및 설정
+
+앱을 실행하고 초기 로딩이 끝나면 Bottle 목록 화면이 표시됩니다.
+Bottle은 Wine이 사용하는 독립 실행 환경을 의미하며, Windows 프로그램과 관련 설정이 이 공간 안에 분리되어 저장됩니다.
+
+<div align="center">
+![](../../../assets/Install/2.png)
+</div>
+새 Bottle을 만들려면 우측 하단의 **+** 버튼을 누른 뒤 사용할 Wine 버전과 DXMT 버전을 선택합니다.
+특정 게임에 맞는 조합이 있다면 해당 조합을 우선 사용하고, 문제가 있을 때만 다른 버전으로 변경하는 것이 좋습니다.
+<div align="center">
+![](../../../assets/Install/3.png)
+</div>
+<Aside type="tip">
+Eternal Return은 Wine11이나 wine-crossover-26.1.0를 사용하는 것을 추천합니다.
+
+호요버스 게임의 경우 Wine 11, Wine 11.11만 동작합니다.
+
+</Aside>
+<div align="center">
+![](../../../assets/Install/5.png)
+</div>
+Bottle이 생성되었습니다.
+
+## 2. 스팀 다운로드 및 설치
+
+<div align="center">
+![](../../../assets/Install/6.png)
+</div>
+Bottle을 클릭하면 다음과 같은 화면이 나옵니다.
+
+<div align="center">
+![](../../../assets/Install/7.png)
+</div>
+런처 설치 열기를 클릭하면 아래와 같이 Steam, HoyoPlay 설치 목록이 나옵니다. 원하는 프로그램을 
+다운로드 합니다.
+<Aside type="caution">
+직접 실행은 Steam 사이트에서 SteamSetup.exe를 직접 다운받아서 실행시키는 것입니다. 다운로드와 설치가 제대로 되지 않을 때만 직접 사용하는 것을 
+권장하고 SteamSetup.exe 외의 프로그램을 저것으로 직접 실행시키면 의도하지 않은 결과가 발생할 수 있습니다. 이 경우에는 그 Bottle을 사용하지
+못하게 될 수 있습니다. 실수로라도 잘못 실행시켰다면 Bottle을 삭제하고 새로 Bottle 환경을 구성해야합니다.
+
+</Aside>
+
+
+<div align="center">
+![](../../../assets/Install/8.png)
+</div>
+다운로드가 완료되면 다운로드 버튼이 설치 버튼으로 변경됩니다.
+<div align="center">
+![](../../../assets/Install/9.png)
+</div>
+설치를 누르고 잠시 대기합니다.
+<div align="center">
+![](../../../assets/Install/10.png)
+</div>
+<div align="center">
+![](../../../assets/Install/11.png)
+</div>
+스팀 인스톨러가 켜지면 다음 버튼을 누르고 설치합니다. 
+<div align="center">
+![](../../../assets/Install/12.png)
+</div>
+설치 위치는 기본값을 그대로 사용하면 됩니다.
+<div align="center">
+![](../../../assets/Install/13.png)
+</div>
+설치가 완료되면 스팀 로그인 화면이 나타나게 됩니다.
+
+<div align="center">
+![](../../../assets/Install/steam1.png)
+</div>
+
+
+이제 로그인을 하고 윈도우에서 하던것 처럼 이터널리턴을 설치하고 플레이하시면 됩니다.
+
+### 추가적인 설치 팁
+
+<div align="center">
+![](../../../assets/Install/steam1.png)
+</div>
+밥똥이리호요 런처는 용량이 큰 게임을 저장하기 위한 **G: drive** 인터페이스를 제공합니다.
+스팀의 설정에서 드라이브 추가를 통해서 **G: drive**를 추가하여 스팀의 게임을 그곳으로 옮겨 둘 수 있습니다.
+이럴 경우 기존 Bottle을 지우더라도 받아놓은 스팀의 게임들을 다시 받지 않아도 됩니다.
+<div align="center">
+![](../../../assets/Install/steam2.png)
+</div>
+스팀 설정에서 storage에 Add drive를 통해서 G드라이브를 추가하면 됩니다.
+<div align="center">
+![](../../../assets/Install/steam3.png)
+</div>
+
+G: Drive는 밥똥이리호요 런처의 설정에서 위치를 조정할 수 있습니다. 
+G: Drive는 자신이 원하는 위치를 설정하거나 기본적으로 제공하는 경로를 사용합니다.
+<div align="center">
+![](../../../assets/Install/GDrive.png)
+</div>
+
+
+
+<Aside type="tip">
+이터널리턴을 시작하면 까만화면이 나오는 경우가 있는데 이 때는 ESC를 눌러주면 해결됩니다.
+이것은 원래 각 시즌마다 첫 실행시 나오는 애니메이션인데 이 부분을 와인이 랜더링을 못해주고 있어서 거기에 
+무한으로 대기하면서 벌어지는 일입니다. 이 부분은 ESC를 눌러서 취소해주면 바로 메인 화면으로 넘어가지게 됩니다.
+</Aside>
+<Aside type="caution">
+첫 실행에서 약간의 Sttutering(버벅임)이 발생할 수 있습니다. 이것은 DXMT나 로제타2가
+캐싱을 하는 과정에서 생기는 자연스러운 현상입니다. 캐싱이 완료되면 이후에는 이 현상은 사라지게 됩니다.
+따라서 Eternal Return을 처음 실행했다면 첫 판부터 랭크를 돌리는 행위는 추천하지 않습니다.
+</Aside>
+
+## 3. 고급 설정
+
+Msync는 사용자의 판단에 따라 키거나 끌 수 있습니다. 이것은 전적으로 사용자의 판단입니다.
+MSync는 퍼포먼스 향상에 도움을 줄 수 있습니다.
+
+첫 Steam 설치 이후에는 Msync는 기본적으로 켜져있지 않습니다. 직접 수동으로 켜 주셔야합니다.
+MSync옵션은 스팀을 켜야 하냐 Eternal Return을 켜야하냐 선택해야하는데 첫 시작 Wine이 어디인가가 중요합니다.
+본인이 Steam 앱 실행이후에 Eternal Return을 키는 거라면 Steam에 Msync옵션을 줘야하며
+Bottle에서 Eternal Return을 즉시 실행할 경우에는 Eternal Return에 직접 주어야 합니다.
+
+모든게 모르겠고 Msync를 키고 싶다면 그냥 두 앱 모두 Msync 옵션을 주면 됩니다.
+
+Msync 옵션을 원하는 앱을 우클릭하고 Launch 옵션으로 들어갑니다.
+<div align="center">
+![](../../../assets/steamOption/msync2.png)
+</div>
+Eternal Return의 Launch 옵션에 들어가줍니다.
+<div align="center">
+![](../../../assets/steamOption/msync3.png)
+</div>
+일반의 Msync 켜기를 선택하고 저장합니다.
+<div align="center">
+![](../../../assets/steamOption/msync1.png)
+</div>
+아까 말했듯이 Steam의 Launch 옵션도 들어가서 같은 옵션을 적용합니다.
+
+
+이 옵션 변경은 Bottle의 Steam, Eternal Return이 이미 돌아가고 있다면 재시작 해줘야 적용됩니다.
