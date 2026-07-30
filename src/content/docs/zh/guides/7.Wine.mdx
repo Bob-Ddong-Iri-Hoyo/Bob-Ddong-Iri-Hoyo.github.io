@@ -8,11 +8,9 @@ sidebar:
 
 ## 提供的 Wine 构建
 
-Bob-Ddong-Iri-Hoyo 提供的 Wine 由基于 CodeWeavers [CrossOver](https://www.codeweavers.com/crossover/source) 开源代码的自定义构建，以及基于 WineHQ 11.10 的自定义构建组成。
-本文档采用的 CrossOver Wine 基准版本是 `26.1.0`。
-
+Bob-Ddong-Iri-Hoyo 提供的 Wine 由基于 CodeWeavers [CrossOver](https://www.codeweavers.com/crossover/source) 开源代码的自定义构建，以及两个基于 WineHQ 的自定义构建组成。
 Wine 是一个兼容层，可以将 Windows 程序的 Windows API 调用转换为 macOS 可以处理的形式，从而在 macOS 上运行这些程序。
-它不是像虚拟机那样运行完整的 Windows 操作系统，因此每个程序的兼容性和稳定性都可能不同。
+它不是像虚拟机那样实现完整的 Windows 操作系统，因此每个程序的兼容性和稳定性都可能不同。
 
 ## 以 DXMT 为中心的配置
 
@@ -33,7 +31,7 @@ DXMT 会将 DirectX 11 命令转换为 Apple Metal API，使其能够在 macOS �
 
 ## 代码自定义
 
-本项目提供的 Wine 包含一些用于解决 Steam 启动问题和 HoYoverse 游戏运行问题的补丁。
+本项目提供的 Wine 包含一些用于解决 Steam 启动问题和 HoYoverse 游戏运行问题的额外补丁。
 这些补丁并不是为了完美支持所有 Windows 程序，而是针对本项目目标游戏运行环境而应用的修改。
 
 为了让 HoYoverse 游戏可以运行，项目参考了 [Dawn Winery](https://dawn.wine/dawn-winery) 的部分代码。

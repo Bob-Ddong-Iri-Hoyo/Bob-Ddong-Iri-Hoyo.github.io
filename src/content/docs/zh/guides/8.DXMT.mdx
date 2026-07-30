@@ -1,40 +1,54 @@
 ---
 title: 关于 DXMT
-description: Bob-Ddong-Iri-Hoyo 使用的 DXMT 中心运行环境配置。
+description: 说明 Bob-Ddong-Iri-Hoyo 使用的 DXMT 中心图形配置。
 slug: zh/guides/about-dxmt
 sidebar:
   order: 8
 ---
 
-## 提供的 Wine 构建
+## 什么是 DXMT？
 
-Bob-Ddong-Iri-Hoyo 提供的 Wine 由基于 CodeWeavers [CrossOver](https://www.codeweavers.com/crossover/source) 开源代码的自定义构建，以及基于 WineHQ 11.10 的自定义构建组成。
-本文档采用的 CrossOver Wine 基准版本是 `26.1.0`。
+DXMT 是一个图形转换层，会将 DirectX 11 图形调用转换为 Apple Metal API 调用。
+由于 macOS 不直接支持 DirectX，运行 Windows 游戏时需要将图形命令转换为 macOS 可以处理的形式。
+Bob-Ddong-Iri-Hoyo 以 DXMT 为中心，处理 Eternal Return 和 HoYoverse 游戏的 DirectX 11 执行路径。
 
-Wine 是一个兼容层，可以将 Windows 程序的 Windows API 调用转换为 macOS 可以处理的形式，从而在 macOS 上运行这些程序。
-它不是像虚拟机那样运行完整的 Windows 操作系统，因此每个程序的兼容性和稳定性都可能不同。
+## 为什么使用 DXMT？
 
-## 以 DXMT 为中心的配置
+使用 DXMT 主要有两个原因。
 
-本项目的 Wine 配置主要面向使用 DirectX 11 的 Eternal Return 和 HoYoverse 游戏。
-因此图形转换层主要以开源的 DXMT 为中心提供。
-DXMT 会将 DirectX 11 命令转换为 Apple Metal API，使其能够在 macOS 上运行。
+### 1. 调用开销较低
 
-也存在像 DXVK 这样经过 Vulkan 的方式，但 macOS 并不原生提供 Vulkan 图形 API。
-因此可能还需要额外的转换层将 Vulkan 再转换为 Metal；本项目会根据目标游戏和 macOS 环境，选择以 DXMT 为中心的配置。
+也存在像 DXVK 这样将 DirectX 调用转换为 Vulkan 的方式。
+但是 macOS 并不原生提供 Vulkan 图形 API，因此可能还需要额外的转换层，将 Vulkan 调用再次转换为 Metal。
+这种结构在调用开销和性能方面可能更不利。
+相比之下，DXMT 的目标是更直接地将 DirectX 11 命令连接到 Metal。
+这也是本项目以 DXMT 为中心构建的原因之一。
 
-## 启动器与 CLI
+### 2. DXMT 是开源项目，可以修改
 
-能够直接操作 Wine 的用户，使用 CLI 版本可能会更灵活。
-因为在 CLI 环境中，可以更细致地控制 Wine prefix、环境变量和运行选项。
+DXMT 是开源项目，因此可以根据本项目的需求修改代码。
+当前在部分环境中出现的绿色闪光和特效破碎现象，可能是由传递给 Apple 图形驱动的特定数值引起的。
+为了缓解这类问题，需要在数值传递给图形驱动之前，将可能造成异常的值调整到安全范围。
+自定义 DXMT 可以在 DXMT 代码中筛选可能产生问题的值，并替换为更安全的值。
 
-相反，不熟悉 Wine 设置的用户更适合使用启动器。
-启动器通过 GUI 提供 Bottle 创建、Wine 版本选择、DXMT 版本选择等重复操作，从而减少配置失误。
+DXVK 也是开源项目，理论上也可以修改，但由于它采用前面提到的 Vulkan 转换结构，因此不是本项目的优先选择。
+GPTK 并不开源，因此无法以相同方式修改。
 
-## 代码自定义
+```text
+DirectX 11 -> Metal
+```
 
-本项目提供的 Wine 包含一些用于解决 Steam 启动问题和 HoYoverse 游戏运行问题的补丁。
-这些补丁并不是为了完美支持所有 Windows 程序，而是针对本项目目标游戏运行环境而应用的修改。
+## 在启动器中的作用
 
-为了让 HoYoverse 游戏可以运行，项目参考了 [Dawn Winery](https://dawn.wine/dawn-winery) 的部分代码。
-相关修改可能会直接影响 Wine 的内部行为，因此在其他游戏或普通 Windows 程序中可能出现预期外的问题。
+在启动器中创建 Bottle 时，也会一并选择 DXMT 版本。
+所选 DXMT 会用于该 Bottle 内运行游戏的图形转换路径。
+不同游戏可能需要不同的 DXMT 版本或选项，因此出现问题时，建议同时确认 Wine 版本、DXMT 版本和启动选项。
+**目前只提供一个 DXMT 构建，因此用户不需要额外考虑 DXMT 版本选择。**
+
+## 限制事项
+
+有了 DXMT 并不代表所有 DirectX 游戏都会自动运行。
+能否运行会根据游戏使用的 DirectX 功能、着色器、反作弊系统和启动器结构而有所不同。
+
+Bob-Ddong-Iri-Hoyo 优先面向 Eternal Return 和 HoYoverse 游戏。
+即使 DXMT 可以在其他游戏中运行，也并不表示该游戏属于官方支持范围。

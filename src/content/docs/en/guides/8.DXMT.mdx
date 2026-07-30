@@ -1,40 +1,54 @@
 ---
 title: About DXMT
-description: The DXMT-centered runtime configuration used by Bob-Ddong-Iri-Hoyo.
+description: The DXMT-centered graphics configuration used by Bob-Ddong-Iri-Hoyo.
 slug: en/guides/about-dxmt
 sidebar:
   order: 8
 ---
 
-## Provided Wine Builds
+## What Is DXMT?
 
-The Wine builds provided by Bob-Ddong-Iri-Hoyo include a custom build based on CodeWeavers' [CrossOver](https://www.codeweavers.com/crossover/source) open source release and a custom build based on WineHQ 11.10.
-The CrossOver Wine version used as the baseline in this documentation is `26.1.0`.
+DXMT is a graphics translation layer that converts DirectX 11 graphics calls into Apple Metal API calls.
+Because macOS does not support DirectX directly, Windows games need a process that translates graphics commands into a form macOS can handle.
+Bob-Ddong-Iri-Hoyo uses a DXMT-centered setup to handle the DirectX 11 execution paths for Eternal Return and HoYoverse games.
 
-Wine is a compatibility layer that lets Windows programs run on macOS by translating Windows API calls into forms macOS can handle.
-Because it does not run a full Windows operating system like a virtual machine, compatibility and stability can vary by program.
+## Why Use DXMT?
 
-## DXMT-Centered Configuration
+There are two main reasons for using DXMT.
 
-This project's Wine configuration primarily targets Eternal Return and HoYoverse games that use DirectX 11.
-For that reason, the graphics translation layer is centered on the open source DXMT project.
-DXMT translates DirectX 11 commands into Apple Metal API calls so they can run on macOS.
+### 1. Lower Call Overhead
 
-Approaches such as DXVK, which route through Vulkan, also exist, but macOS does not provide Vulkan as a native graphics API.
-That may require an additional layer to translate Vulkan back to Metal, so this project chooses a DXMT-centered setup based on the target games and the macOS environment.
+Approaches such as DXVK, which translate DirectX calls into Vulkan, also exist.
+However, macOS does not provide Vulkan as a native graphics API, so an additional layer may be required to translate Vulkan calls back into Metal.
+This structure can be less favorable in terms of call overhead and performance.
+By contrast, DXMT aims to connect DirectX 11 commands to Metal more directly.
+This is one of the reasons this project is centered on DXMT.
 
-## Launcher and CLI
+### 2. It Is Open Source and Modifiable
 
-Users who can work with Wine directly may find the CLI version more flexible.
-In a CLI environment, Wine prefixes, environment variables, and launch options can be controlled in detail.
+DXMT is open source, so its code can be modified to fit the needs of this project.
+The green flashes and broken effects that appear in some environments may be caused by certain values passed to Apple's graphics driver.
+To reduce those issues, values that may cause problems need to be adjusted to a safe range before they reach the graphics driver.
+A custom DXMT build can filter potentially problematic values inside the DXMT code and replace them with safer values.
 
-Users who are not familiar with Wine settings are usually better served by the launcher.
-The launcher provides repetitive tasks such as Bottle creation, Wine version selection, and DXMT version selection through a GUI, helping reduce configuration mistakes.
+DXVK is also open source and can be modified, but because it routes through Vulkan as described above, it is not this project's preferred option.
+GPTK is not open source, so it cannot be modified in the same way.
 
-## Code Customization
+```text
+DirectX 11 -> Metal
+```
 
-The provided Wine builds include some patches for Steam launch issues and HoYoverse game launch issues.
-These patches are not intended to perfectly support every Windows program; they are changes applied for the game runtime environment targeted by this project.
+## Role in the Launcher
 
-To make HoYoverse games run, this project references part of the code from [Dawn Winery](https://dawn.wine/dawn-winery).
-Those changes can directly affect Wine's internal behavior, so unexpected issues may occur in other games or general Windows programs.
+When you create a Bottle in the launcher, you also choose the DXMT version.
+The selected DXMT is used as the graphics translation path for games running inside that Bottle.
+Different games may require different DXMT versions or options, so when an issue occurs, it is useful to check the DXMT version and launch options together with the Wine version.
+**Currently, only one DXMT build is provided, so users do not need to choose among DXMT versions.**
+
+## Limitations
+
+DXMT does not make every DirectX game run automatically.
+Compatibility can vary depending on the DirectX features, shaders, anti-cheat systems, and launcher structure used by each game.
+
+Bob-Ddong-Iri-Hoyo primarily targets Eternal Return and HoYoverse games.
+Even if DXMT works with another game, that does not mean the game is officially supported.

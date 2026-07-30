@@ -8,11 +8,9 @@ sidebar:
 
 ## 提供される Wine ビルド
 
-バブトンイリホヨで提供される Wine は、CodeWeavers の [CrossOver](https://www.codeweavers.com/crossover/source) 公開ソースをベースにしたカスタムビルドと、WineHQ 11.10 ベースのカスタムビルドで構成されています。
-このドキュメントで基準にしている CrossOver Wine バージョンは `26.1.0` です。
-
+バブトンイリホヨで提供される Wine は、CodeWeavers の [CrossOver](https://www.codeweavers.com/crossover/source) 公開ソースをベースにしたカスタムビルドと、2 つの WineHQ ベースのカスタムビルドで構成されています。
 Wine は、Windows プログラムを macOS 上で実行できるように、Windows API 呼び出しを macOS で処理可能な形へ変換する互換レイヤーです。
-仮想マシンのように Windows OS 全体を実行する方式ではないため、プログラムごとに互換性や安定性が異なる場合があります。
+仮想マシンのように Windows OS 全体を実装する方式ではないため、プログラムごとに互換性や安定性が異なる場合があります。
 
 ## DXMT 中心の構成
 
@@ -33,7 +31,7 @@ CLI 環境では Wine prefix、環境変数、実行オプションを細かく�
 
 ## コードのカスタマイズ
 
-提供される Wine には、Steam の起動問題や HoYoverse ゲームの実行問題を解決するための一部パッチが含まれています。
+提供される Wine には、Steam の起動問題や HoYoverse ゲームの実行問題を解決するための追加パッチが含まれています。
 これらのパッチはすべての Windows プログラムを完全にサポートするためのものではなく、プロジェクトが目標とするゲーム実行環境に合わせて適用された変更です。
 
 HoYoverse ゲームを実行可能にするため、[Dawn Winery](https://dawn.wine/dawn-winery) のコードを一部参考にしています。
