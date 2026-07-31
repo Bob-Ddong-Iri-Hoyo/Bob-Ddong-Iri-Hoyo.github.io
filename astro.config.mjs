@@ -6,7 +6,7 @@ const [githubOwner = 'Bob-Ddong-Iri-Hoyo', githubRepo = 'Bob-Ddong-Iri-Hoyo.gith
 	process.env.GITHUB_REPOSITORY?.split('/') ?? [];
 const isRootPagesRepo = githubRepo.toLowerCase() === `${githubOwner.toLowerCase()}.github.io`;
 const base = isRootPagesRepo ? '' : `/${githubRepo}`;
-const site = `https://${githubOwner.toLowerCase()}.github.io`;
+const site = process.env.PUBLIC_SITE_URL ?? 'https://bdih.faby.day';
 
 // https://astro.build/config
 export default defineConfig({
@@ -44,10 +44,8 @@ export default defineConfig({
 				{ tag: 'script', attrs: { src: `${base}/scripts/locale-router.js`, defer: true } },
 			],
 			social: [
-				
 				{ icon: 'discord', label: 'Discord', href: 'https://discord.faby.day' },
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher' },
-
 			],
 			sidebar: [
 				{
