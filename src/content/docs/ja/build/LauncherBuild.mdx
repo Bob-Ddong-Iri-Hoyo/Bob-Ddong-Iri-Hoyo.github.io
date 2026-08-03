@@ -1,40 +1,85 @@
 ---
-title: ビルドを始める
-description: Wine と DXMT のビルドに必要な基準情報を説明します。
+title: ビルド文書の概要
+description: BDIH Launcher、Wine、DXMT のビルド文書を読む順序と基準を説明します。
+sidebar:
+  order: 1
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
 
-## ビルド基準
+## 文書の範囲
+
+このセクションは、バブトンイリホヨ ランチャーアプリ、Wine ランタイム、DXMT ランタイムを自分でビルドしたい保守者、またはリリース成果物の構造を理解したい保守者向けの文書です。
+ランチャーをインストールしてゲームを実行するだけの場合、このセクションに沿って自分でビルドする必要はありません。
 
 <CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
+  <Card title="BDIH-Launcher">
+    Electron、React、TypeScript ベースの macOS ランチャーアプリをビルドしてパッケージングするリポジトリです。
   </Card>
-
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
+  <Card title="wine-build">
+    WineHQ 11.0、WineHQ 11.11、CrossOver 26.1.0 ベースの Wine ランタイムをビルドしてパッケージングするリポジトリです。
+  </Card>
+  <Card title="dxmt-er-build">
+    Eternal Return 向けのグラフィック修正を含む DXMT v0.80 ランタイムをビルドするリポジトリです。
   </Card>
 </CardGrid>
 
-このドキュメントは、バブトンイリホヨ ランチャーで使用する Wine と DXMT の構成要素を自分でビルドしたい、またはビルド環境を理解したいユーザー向けに基準情報を整理したものです。
-ランチャーだけを使用する場合、このドキュメントに従ってビルドする必要はありません。
+## 読む順序
 
-## クロスコンパイラ構成
+1. **ビルド文書の概要**で全体構造とルールを確認します。
+2. **BDIH Launcher ビルド**でランチャーアプリのローカルビルド、パッケージング、テスト、配布ポリシーを確認します。
+3. **Wine ランタイムのビルド**で WineHQ 系列と CrossOver 系列のランタイムをどう作るか確認します。
+4. **DXMT ビルド**で Eternal Return 向け DXMT パッチとパッケージングの流れを確認します。
+5. **リリースとメタデータ**でランチャーが読む manifest、artifact 構造、ライセンス基準を確認します。
 
-ビルド過程では、目的の異なる 2 種類のツールチェーンが使われます。
+## 基準リポジトリ
 
-- Wine のビルドには、Windows ターゲットのバイナリを作成するための `mingw` ツールチェーンが必要です。
-- DXMT のビルドには、Metal 変換レイヤーをビルドするための `llvm` ベースのツールが必要です。
+各リポジトリのビルドコマンドとパッチ適用順序が基準です。
+文書とスクリプトが食い違って見える場合は、まずスクリプトを確認してください。
 
-Wine 用の `mingw` ツールチェーンは、別途用意された toolchain をダウンロードして使用します。
-DXMT 用の `llvm` は、DXMT のビルド手順に合わせるため、別途ビルドする方式を基準にしています。
-両方を 1 つの共通ツールチェーンに統合することもできますが、現在のドキュメントでは DXMT チュートリアルの流れに沿って、Wine と DXMT のビルド手順を分けて説明します。
+- Wine ランタイム: [Bob-Ddong-Iri-Hoyo/wine-build](https://github.com/Bob-Ddong-Iri-Hoyo/wine-build)
+- DXMT ランタイム: [Bob-Ddong-Iri-Hoyo/dxmt-er-build](https://github.com/Bob-Ddong-Iri-Hoyo/dxmt-er-build)
+- ランチャーアプリ: [Bob-Ddong-Iri-Hoyo/BDIH-Launcher](https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher)
 
-## ビルド文書の読み方
+<Aside type="caution">
+このセクションのコマンドは、それぞれのソースリポジトリのルートで実行する前提です。
+この文書サイトのリポジトリ内でそのまま実行するコマンドではありません。
+</Aside>
 
-このページは、すべてのビルドコマンドを並べるのではなく、どの構成要素がなぜ必要なのかを理解することに焦点を置いています。
-実際のビルドスクリプトや詳細なコマンドは、関連リポジトリの README とビルド文書もあわせて確認してください。
+## ビルド原則
 
-ビルドが失敗した場合は、まず使用している Wine バージョン、DXMT バージョン、`mingw` と `llvm` のバージョンがこのドキュメントの基準と一致しているか確認することをおすすめします。
-互換レイヤーのプロジェクトは依存関係のバージョンに大きく影響されるため、小さなバージョン差でもビルドエラーや実行時問題につながることがあります。
+ソース変更は追跡可能な patch set とスクリプトに残す必要があります。
+`artifacts/` 配下の一時成果物、実験ログ、ローカル artifact はリリース基準ではありません。
+
+DXMT は、既定では Wine パッケージに含めず、外部ランタイムとして管理します。
+これにより、Wine を再ビルドしなくても DXMT だけを差し替えたりロールバックしたりできます。
+
+リリースビルドには、一時的な診断カウンター、トレースコード、ローカル実験パッチを残さない方針です。
+測定用の debug build と、ユーザーに配布する release build は分けて扱います。
+
+## 現在の基準
+
+| 構成要素 | 基準 |
+| --- | --- |
+| ランチャーアプリ | Electron 41、React 19、TypeScript 6、Webpack 5 |
+| 現在の WineHQ 系列 | `wine-winehq-11.11` |
+| WineHQ 比較/互換系列 | `wine-winehq-11` |
+| CrossOver 系列 | `wine-crossover-26.1.0` |
+| DXMT | `v0.80` |
+| Eternal Return 向け DXMT パッチ | `sanitizeOutput` のみ |
+
+WineHQ 11.11 は現在の WineHQ 系列の基準ビルドです。
+WineHQ 11.0 は比較と互換性のための fallback ラインとして維持しています。
+CrossOver 26.1.0 は Eternal Return の検証を中心に扱う別系列です。
+
+## ビルドが失敗したとき
+
+まず次の項目を確認します。
+
+- コマンドを対象リポジトリのルートで実行しているか確認します。
+- Wine バージョン、DXMT tag、patch set、toolchain バージョンが文書の基準と一致しているか確認します。
+- `clean.sh` の後に同じ patch set をきれいに再適用できるか確認します。
+- 古い prefix や残った DLL が新しいランタイムと混ざっていないか確認します。
+
+互換レイヤーのプロジェクトは、依存関係のバージョンとローカル prefix の状態に強く影響されます。
+小さなバージョン差や古い prefix-local DLL でも、ビルド成功後のランタイム問題につながることがあります。

@@ -1,40 +1,135 @@
 ---
-title: Versioning
-description: BDIH versioning.
+title: Releases And Metadata
+description: Wine and DXMT artifacts, launcher manifests, and licensing checks.
+sidebar:
+  order: 5
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-## Build Baseline
+## Artifact Names
 
-<CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
-  </Card>
+Wine runtime artifacts are produced with a runtime directory, tarball, checksum, and sidecar JSON.
 
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
-  </Card>
-</CardGrid>
+```text
+artifacts/wine-$BUILD_NAME/
+  wine-$BUILD_NAME-build/
+  wine-$BUILD_NAME-install/
+  wine-$BUILD_NAME/
+  wine-$BUILD_NAME.tar.gz
+  wine-$BUILD_NAME.tar.gz.sha256
+  wine-$BUILD_NAME.json
+```
 
-This document summarizes the baseline information for users who want to build the Wine and DXMT components used by the Bob-Ddong-Iri-Hoyo launcher, or understand the build environment.
-If you only use the launcher, you do not need to build these components yourself.
+Current names:
 
-## Cross-Compiler Setup
+| BUILD_NAME | Release Name |
+| --- | --- |
+| `winehq-11.11` | `wine-winehq-11.11` |
+| `winehq-11` | `wine-winehq-11` |
+| `crossover-26.1.0` | `wine-crossover-26.1.0` |
 
-The build process uses two toolchains for different purposes.
+DXMT is managed as a separate artifact.
 
-- Wine builds require a `mingw` toolchain for producing Windows-targeted binaries.
-- DXMT builds require `llvm`-based tools for building the Metal translation layer.
+```text
+artifacts/dxmt-v0.80-builtin.tar.gz
+artifacts/dxmt-v0.80-builtin.tar.gz.sha256
+```
 
-The `mingw` toolchain for Wine is downloaded from a separately prepared toolchain package.
-The `llvm` setup for DXMT is treated as a separate build so it stays aligned with the DXMT build flow.
-These setups could be merged into one shared toolchain, but this documentation currently follows the DXMT tutorial flow and separates the Wine and DXMT build steps.
+## Launcher Metadata
 
-## How to Read the Build Docs
+The Wine package step writes launcher metadata both inside the runtime and next to the artifact.
 
-This page focuses on explaining which components are needed and why, rather than listing every build command.
-For actual build scripts and detailed commands, check the README and build documentation in the related repositories.
+```text
+<WINE_ROOT>/share/bdhi/launcher-options.json
+artifacts/wine-$BUILD_NAME/wine-$BUILD_NAME.json
+```
 
-When a build fails, first check whether the Wine version, DXMT version, `mingw` version, and `llvm` version match the baseline in this documentation.
-Compatibility-layer projects are strongly affected by dependency versions, so even small version differences can lead to build errors or runtime issues.
+Metadata selection order:
+
+```text
+BDHI_LAUNCHER_OPTIONS_FILE
+metadata/bdhi-launcher-options.$BUILD_NAME.json
+metadata/bdhi-launcher-options.$PATCH_SET.json
+metadata/bdhi-launcher-options.json
+```
+
+The launcher should prefer the manifest inside the unpacked runtime.
+The sidecar JSON can be used to show release information before downloading.
+When adding a new runtime flavor, create a dedicated metadata file unless it intentionally shares an existing patch-set manifest.
+
+<Aside type="caution">
+Editing metadata does not update an artifact that has already been produced.
+Run the package step again before distributing manifest changes.
+</Aside>
+
+## Capabilities
+
+`capabilities` in metadata is an internal launcher contract.
+It should not be exposed as a normal user setting.
+
+The process telemetry capability describes the prefix-scoped FIFO used to send Wine server process table events.
+
+```json
+{
+  "protocol": 1,
+  "transport": "fifo",
+  "activationEnvironment": "WINE_BDIH_PROCESS_TELEMETRY",
+  "pipeEnvironment": "WINE_BDIH_PROCESS_PIPE"
+}
+```
+
+Wine only reports process lifecycle facts.
+The Bob-Ddong-Iri-Hoyo Launcher is responsible for deciding whether a process is an installer, launcher, game, or helper.
+
+WineHQ metadata also declares the HoYoPlay proxy capability.
+If a declared helper is missing from the artifact, treat the runtime as incomplete and fail clearly.
+
+## Process Telemetry Policy
+
+Process telemetry is not specific to Steam or HoYoPlay.
+It reports prefix-wide Wine process lifecycle events.
+
+Enable it with:
+
+```text
+WINE_BDIH_PROCESS_TELEMETRY=1
+WINE_BDIH_PROCESS_PIPE=/absolute/native/path/to/process-events.fifo
+```
+
+Create the FIFO with `0600` permissions.
+Command lines may contain tokens or user paths, so avoid logging raw payloads.
+If there is no reader, the pipe is full, or a write fails, Wine should drop the event.
+Telemetry must never delay or fail a Wine process or wineserver.
+
+## Licensing And Distribution
+
+Wine runtime archives contain third-party binaries.
+The repository license and runtime distribution obligations must be handled separately.
+
+The package step writes this license bundle into the runtime.
+
+```text
+<WINE_ROOT>/share/licenses/
+  README.md
+  BUILD-PROVENANCE.txt
+  source/
+  homebrew/
+  dwproton/
+  dxmt/
+```
+
+`dwproton/` applies when WineHQ Proton extras are bundled.
+`dxmt/` applies only when DXMT is explicitly bundled.
+Multimedia components such as GStreamer, FFmpeg, x264, and x265 can change with Homebrew updates, so recheck their dependency and license set before release.
+
+## Release Check
+
+Before publishing a release:
+
+- Confirm that the same patch set replays after `clean.sh`.
+- Confirm that temporary debug counters, tracing, and local-only patches are not in release sources.
+- Confirm that the tarball, `.sha256`, and sidecar JSON refer to the same build output.
+- Confirm that `share/bdhi/launcher-options.json` matches the sidecar JSON.
+- Confirm that `share/licenses/` matches the binaries included in the runtime.
+- Recheck the workloads declared by the runtime, such as Steam, Eternal Return, or the HoYoPlay backend.

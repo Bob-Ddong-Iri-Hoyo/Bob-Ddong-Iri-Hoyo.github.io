@@ -1,40 +1,147 @@
 ---
-title: Getting Started with Builds
-description: Baseline information required to build Wine and DXMT.
+title: Wine Runtime Builds
+description: The WineHQ and CrossOver runtime build flow in the wine-build repository.
+sidebar:
+  order: 3
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-## Build Baseline
+## Runtime Lines
 
-<CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
-  </Card>
+The `wine-build` repository provides reproducible macOS Wine runtime build and packaging pipelines for the Bob-Ddong-Iri-Hoyo Launcher.
+Three runtime lines are currently maintained.
 
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
-  </Card>
-</CardGrid>
+| Runtime | Build Command | Output |
+| --- | --- | --- |
+| `wine-winehq-11.11` | `./scripts/winehq-11.11/build-all.sh` | `artifacts/wine-winehq-11.11/wine-winehq-11.11` |
+| `wine-winehq-11` | `./scripts/winehq-11/build-all.sh` | `artifacts/wine-winehq-11/wine-winehq-11` |
+| `wine-crossover-26.1.0` | `./scripts/crossover-26.1.0/build-all.sh` | `artifacts/wine-crossover-26.1.0/wine-crossover-26.1.0` |
 
-This document summarizes the baseline information for users who want to build the Wine and DXMT components used by the Bob-Ddong-Iri-Hoyo launcher, or understand the build environment.
-If you only use the launcher, you do not need to build these components yourself.
+WineHQ 11.11 is the current WineHQ baseline.
+WineHQ 11.0 is a separate comparison and compatibility line.
+CrossOver 26.1.0 applies a separate CrossOver-based patch set and does not bundle the WineHQ-only DWProton extras or HoYoPlay proxy by default.
 
-## Cross-Compiler Setup
+## Preparation
 
-The build process uses two toolchains for different purposes.
+The build is intended for macOS.
+Prepare the Homebrew dependencies and shared toolchain first.
 
-- Wine builds require a `mingw` toolchain for producing Windows-targeted binaries.
-- DXMT builds require `llvm`-based tools for building the Metal translation layer.
+```bash
+./scripts/common/install-brew-deps.sh
+./scripts/common/fetch-toolchain.sh
+```
 
-The `mingw` toolchain for Wine is downloaded from a separately prepared toolchain package.
-The `llvm` setup for DXMT is treated as a separate build so it stays aligned with the DXMT build flow.
-These setups could be merged into one shared toolchain, but this documentation currently follows the DXMT tutorial flow and separates the Wine and DXMT build steps.
+Each `build-all.sh` also calls the shared toolchain step.
+Running the setup commands first makes it easier to separate dependency failures from runtime build failures.
 
-## How to Read the Build Docs
+## Build
 
-This page focuses on explaining which components are needed and why, rather than listing every build command.
-For actual build scripts and detailed commands, check the README and build documentation in the related repositories.
+Run the `build-all.sh` for the runtime you want to produce.
 
-When a build fails, first check whether the Wine version, DXMT version, `mingw` version, and `llvm` version match the baseline in this documentation.
-Compatibility-layer projects are strongly affected by dependency versions, so even small version differences can lead to build errors or runtime issues.
+```bash
+./scripts/winehq-11.11/build-all.sh
+./scripts/winehq-11/build-all.sh
+./scripts/crossover-26.1.0/build-all.sh
+```
+
+For a clean patch replay, run the target runtime's `clean.sh` first.
+
+```bash
+./scripts/winehq-11.11/clean.sh
+./scripts/winehq-11.11/build-all.sh
+```
+
+`clean.sh` removes the selected flavor's source and outputs while keeping shared download caches and toolchains.
+When validating patch application, prefer a clean build without `--keep-source`.
+
+## Pipeline
+
+The CrossOver line is built with this flow.
+
+```text
+common/fetch-toolchain.sh
+crossover-26.1.0/fetch-source.sh
+crossover-26.1.0/apply-patches.sh
+crossover-26.1.0/configure.sh
+common/build.sh
+common/install.sh
+common/package.sh
+```
+
+The WineHQ lines also prepare DWProton extras and the HoYoPlay proxy.
+
+```text
+common/fetch-toolchain.sh
+BDIH-HelperProgram/hoyoplay-proxy/build.sh
+winehq-*/fetch-source.sh
+winehq-*/apply-patches.sh
+winehq-*/fetch-dwproton-source.sh
+winehq-*/prepare-dwproton-lsteamclient.sh
+winehq-*/configure.sh
+common/build.sh
+winehq-*/build-proton-steam.sh
+common/install.sh
+common/package.sh
+```
+
+WineHQ packages include DWProton `steam.exe`, `lsteamclient`, the HoYoPlay proxy, GStreamer, macOS msync, Steam CEF compatibility patches, and the HoYoPlay routing backend.
+CrossOver packages include Steam and object-directory compatibility patches plus the shared process telemetry patch, but not the WineHQ-only extras by default.
+
+## Steam Baseline
+
+The WineHQ and CrossOver lines use the same Steam UI stability baseline for eligible `steamwebhelper.exe` processes.
+
+```text
+--no-sandbox --in-process-gpu --disable-gpu
+```
+
+The arguments are not appended to `steam.exe` itself.
+They are also not injected into crashpad handlers or host-resolver helpers.
+Steam overlay DLL overrides are not part of the Wine patch and should be set explicitly for overlay tests.
+
+## HoYoPlay Baseline
+
+The WineHQ lines include a backend that detects HoYoPlay game child processes and sends a route event so the launcher can start the actual game in a separate game prefix.
+This keeps HoYoPlay login and update state in the launcher prefix while game-specific state such as DXMT, media, HoYoProtect, and msync belongs to the game prefix.
+
+This is not a complete end-user workflow inside Wine alone.
+The Bob-Ddong-Iri-Hoyo Launcher is responsible for prefix creation, event validation, game profile preparation, actual launch, and process tracking.
+
+## Eternal Return Notes
+
+WineHQ 11.11 has an investigation note showing higher `set_timer` and `select` wineserver request traffic in Eternal Return compared with WineHQ 11.0.
+The docs treat this as a performance investigation item that may affect CPU and thermal headroom, not as a confirmed regression or release blocker.
+
+Do not leave temporary request counters in a release build.
+A change should only move into the release patch set after frametime improvement is measured and Steam plus HoYoverse workloads are checked for regressions.
+
+## Options And Outputs
+
+Common override examples:
+
+```bash
+BUILD_NAME=winehq-11-test ./scripts/winehq-11/build-all.sh
+BREW_PREFIX="$(brew --prefix)" ./scripts/crossover-26.1.0/build-all.sh
+BUNDLE_PROTON_EXTRAS=0 ./scripts/winehq-11/build-all.sh
+BUNDLE_DXMT_RUNTIME=1 \
+DXMT_RUNTIME_DIR=/path/to/dxmt-runtime \
+./scripts/winehq-11.11/build-all.sh
+```
+
+Packaging produces this layout.
+
+```text
+artifacts/wine-$BUILD_NAME/
+  wine-$BUILD_NAME-build/
+  wine-$BUILD_NAME-install/
+  wine-$BUILD_NAME/
+  wine-$BUILD_NAME.tar.gz
+  wine-$BUILD_NAME.tar.gz.sha256
+  wine-$BUILD_NAME.json
+```
+
+<Aside type="tip">
+DXMT is not bundled into the Wine package by default.
+Use `BUNDLE_DXMT_RUNTIME=1` only for dedicated validation or special packaging.
+</Aside>

@@ -1,40 +1,142 @@
 ---
-title: 빌드 시작하기
-description: Wine과 DXMT 빌드에 필요한 기준 정보를 설명합니다.
+title: DXMT 빌드
+description: dxmt-er-build 저장소의 DXMT v0.80 빌드와 이터널리턴 패치를 설명합니다.
+sidebar:
+  order: 4
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-## 빌드 기준
+## 빌드 목적
 
-<CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
-  </Card>
+`dxmt-er-build` 저장소는 DXMT `v0.80`에 이터널리턴 전용 pixel output sanitization 패치를 적용한 런타임을 빌드합니다.
+이 패치는 이터널리턴에서 관찰된 섬광과 깨진 그래픽 문제를 줄이기 위한 보정입니다.
 
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
-  </Card>
-</CardGrid>
+패치는 `d3d11.sanitizeOutput` 옵션을 추가하고 `EternalReturn.exe`에만 기본 적용합니다.
+`dxgi.forceSDR`, `sampleNaNToZero`, `defuseFma` 같은 다른 실험 옵션은 켜지 않습니다.
 
-이 문서는 밥똥이리호요 런처에서 사용하는 Wine과 DXMT 구성 요소를 직접 빌드하거나, 빌드 환경을 이해하려는 사용자를 위한 기준 정보를 정리합니다.
-런처만 사용하는 경우에는 이 문서를 따라 빌드할 필요가 없습니다.
+<Aside type="caution">
+이 패치는 Wine core patch가 아니라 DXMT shader 변환 경로의 앱별 보정입니다.
+다른 게임의 D3D 동작을 바꾸지 않도록 이터널리턴에만 적용하는 것을 기준으로 합니다.
+</Aside>
 
-## 크로스 컴파일러 구성
+## 준비
 
-빌드 과정에서는 목적이 다른 두 종류의 툴체인이 사용됩니다.
+macOS, Xcode Command Line Tools, `git`, `curl`, `cmake`, `meson`, `ninja`가 필요합니다.
+또한 builtin Wine DLL과 `.so`를 만들기 위해 Wine build tree가 필요합니다.
 
-- Wine 빌드에는 Windows 대상 바이너리를 만들기 위한 `mingw` 툴체인이 필요합니다.
-- DXMT 빌드에는 Metal 변환 레이어를 빌드하기 위한 `llvm` 기반 도구가 필요합니다.
+기본 Wine build tree 경로는 다음과 같습니다.
 
-Wine용 `mingw` 툴체인은 별도로 준비된 toolchain을 다운로드해 사용합니다.
-DXMT용 `llvm`은 DXMT 빌드 절차와 맞추기 위해 별도로 빌드하는 방식을 기준으로 합니다.
-두 구성을 하나의 공통 툴체인으로 통합할 수도 있지만, 현재 문서는 DXMT 튜토리얼의 흐름을 따라 Wine과 DXMT 빌드 단계를 분리해 설명합니다.
+```text
+./wine-build/build64
+```
 
-## 빌드 문서를 읽는 방법
+다른 경로를 사용한다면 `WINE_BUILD`로 지정합니다.
 
-이 페이지는 전체 빌드 명령어를 나열하기보다, 어떤 구성 요소가 왜 필요한지 이해하는 데 초점을 둡니다.
-실제 빌드 스크립트나 세부 명령은 관련 저장소의 README와 빌드 문서를 함께 확인해야 합니다.
+```bash
+WINE_BUILD=/path/to/wine-build/build64 ./scripts/build-dxmt.sh
+```
 
-빌드가 실패할 때는 먼저 사용 중인 Wine 버전, DXMT 버전, `mingw`와 `llvm` 버전이 문서의 기준과 맞는지 확인하는 것이 좋습니다.
-호환 계층 프로젝트는 의존성 버전의 영향을 크게 받기 때문에, 작은 버전 차이도 빌드 오류나 런타임 문제로 이어질 수 있습니다.
+## 빌드 순서
+
+먼저 DXMT용 toolchain을 준비하고 DXMT source를 가져옵니다.
+
+```bash
+./scripts/fetch-toolchains.sh
+./scripts/fetch-dxmt.sh
+```
+
+그 다음 Wine build tree를 지정해 DXMT runtime을 빌드합니다.
+
+```bash
+WINE_BUILD=/path/to/wine-build/build64 ./scripts/build-dxmt.sh
+```
+
+기본 경로에 Wine build tree를 연결해 두었다면 다음처럼 실행할 수 있습니다.
+
+```bash
+./scripts/build-dxmt.sh
+```
+
+## 결과물
+
+빌드가 끝나면 `dxmt-runtime`과 tarball artifact가 생성됩니다.
+
+```text
+dxmt-runtime/
+  i386-windows/
+  x86_64-windows/
+  x86_64-unix/
+
+artifacts/
+  dxmt-v0.80-builtin.tar.gz
+  dxmt-v0.80-builtin.tar.gz.sha256
+```
+
+archive는 `dxmt-v0.80-builtin/` 디렉터리로 풀리도록 만들어집니다.
+runtime과 archive에는 DXMT와 관련 third-party license가 함께 포함됩니다.
+
+## 설치와 override
+
+Wine Stable 경로에 설치해야 할 때는 설치 스크립트를 사용할 수 있습니다.
+기존 파일은 timestamp가 포함된 backup으로 보존됩니다.
+
+```bash
+./scripts/install-to-wine-stable.sh
+```
+
+Wine에서는 DXMT DLL을 builtin 우선으로 사용하도록 override를 맞춥니다.
+
+```text
+d3d10core = builtin,native
+d3d11     = builtin,native
+dxgi      = builtin,native
+winemetal = builtin,native
+```
+
+런처에 통합할 때는 Wine root와 prefix-local DLL이 서로 다른 DXMT 버전으로 섞이지 않도록 관리해야 합니다.
+오래된 prefix-local DLL이 남아 있으면 새 런타임을 설치해도 이전 DXMT가 로드될 수 있습니다.
+
+## 이터널리턴 보정 방식
+
+진단 결과 이 문제는 Wine의 일반적인 pointer truncation, row pitch, stride, buffer size 문제보다는 D3D shader가 macOS graphics backend로 변환되는 경계에서 발생하는 부동소수점 호환성 문제에 가깝다고 정리되었습니다.
+
+현재 보정은 pixel shader output에 NaN 또는 Inf 같은 non-finite 값이 들어갈 때 이를 `0.0`으로 바꾸는 방식입니다.
+개념적으로는 다음 흐름입니다.
+
+```text
+game DXBC pixel shader
+  -> DXMT LLVM/AIR conversion
+  -> injected non-finite output epilogue
+  -> Metal shader compilation
+  -> GPU execution
+  -> render-target write
+```
+
+이 처리는 branchless select에 가깝고 비용은 예측 가능하지만, 완전히 공짜는 아닙니다.
+또한 D3D conformance 관점에서는 NaN/Inf가 float render target에 남아야 하는 경우가 있으므로 전역 기본값으로 두지 않습니다.
+
+## 검증
+
+이터널리턴을 실행해 보정 적용 여부를 비교할 때는 shader cache를 끄고 A/B 테스트를 진행합니다.
+
+```bash
+DXMT_SHADER_CACHE=0 /path/to/your/steam-launcher.sh
+DXMT_SHADER_CACHE=0 DXMT_DISABLE_OUTPUT_SANITIZE=1 /path/to/your/steam-launcher.sh
+```
+
+첫 번째 명령은 sanitize output이 켜진 상태를 확인합니다.
+두 번째 명령은 보정을 끈 비교 실행입니다.
+
+## 진단 빌드
+
+CrossOver 26.1.0 대상으로 별도 diagnostic build도 존재합니다.
+이 빌드는 shader DXBC dump, DXMT log, Xcode `.gputrace`, non-finite output marker를 얻기 위한 용도입니다.
+
+```bash
+./scripts/build-crossover-26.1.0-diagnostic.sh
+./scripts/test-crossover-26.1.0-diagnostic.sh
+```
+
+진단 marker는 흰색 pixel 출력으로 문제 위치를 확인하기 위한 도구이며, 실제 사용자용 해결책이 아닙니다.
+릴리즈 빌드에는 진단 marker와 tracing 코드를 포함하지 않는 것을 기준으로 합니다.

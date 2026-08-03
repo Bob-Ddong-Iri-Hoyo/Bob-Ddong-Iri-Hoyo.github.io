@@ -1,40 +1,85 @@
 ---
-title: Getting Started with Builds
-description: Baseline information required to build Wine and DXMT.
+title: Build Docs Overview
+description: How to read the BDIH Launcher, Wine, and DXMT build documentation.
+sidebar:
+  order: 1
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
 
-## Build Baseline
+## Scope
+
+This section is for maintainers who want to build the Bob-Ddong-Iri-Hoyo Launcher app, Wine runtimes, DXMT runtimes, or understand how those release artifacts are structured.
+If you only want to install the launcher and play games, you do not need to build these components yourself.
 
 <CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
+  <Card title="BDIH-Launcher">
+    Builds and packages the macOS launcher app based on Electron, React, and TypeScript.
   </Card>
-
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
+  <Card title="wine-build">
+    Builds and packages the WineHQ 11.0, WineHQ 11.11, and CrossOver 26.1.0 based Wine runtimes.
+  </Card>
+  <Card title="dxmt-er-build">
+    Builds a DXMT v0.80 runtime with the Eternal Return specific graphics workaround.
   </Card>
 </CardGrid>
 
-This document summarizes the baseline information for users who want to build the Wine and DXMT components used by the Bob-Ddong-Iri-Hoyo launcher, or understand the build environment.
-If you only use the launcher, you do not need to build these components yourself.
+## Reading Order
 
-## Cross-Compiler Setup
+1. Read **Build Docs Overview** to understand the overall structure and rules.
+2. Read **BDIH Launcher Build** for local app builds, packaging, tests, and publishing policy.
+3. Read **Wine Runtime Builds** to see how the WineHQ and CrossOver runtime lines are built.
+4. Read **DXMT Build** to see how the Eternal Return DXMT patch and package are produced.
+5. Read **Releases and Metadata** to understand launcher manifests, artifact layout, and licensing checks.
 
-The build process uses two toolchains for different purposes.
+## Source Repositories
 
-- Wine builds require a `mingw` toolchain for producing Windows-targeted binaries.
-- DXMT builds require `llvm`-based tools for building the Metal translation layer.
+The build commands and patch order in each repository are the source of truth.
+If the docs and scripts appear to disagree, check the scripts first.
 
-The `mingw` toolchain for Wine is downloaded from a separately prepared toolchain package.
-The `llvm` setup for DXMT is treated as a separate build so it stays aligned with the DXMT build flow.
-These setups could be merged into one shared toolchain, but this documentation currently follows the DXMT tutorial flow and separates the Wine and DXMT build steps.
+- Wine runtime: [Bob-Ddong-Iri-Hoyo/wine-build](https://github.com/Bob-Ddong-Iri-Hoyo/wine-build)
+- DXMT runtime: [Bob-Ddong-Iri-Hoyo/dxmt-er-build](https://github.com/Bob-Ddong-Iri-Hoyo/dxmt-er-build)
+- Launcher app: [Bob-Ddong-Iri-Hoyo/BDIH-Launcher](https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher)
 
-## How to Read the Build Docs
+<Aside type="caution">
+The commands in this section are meant to be run from the root of each source repository.
+They are not commands to run directly inside this documentation site repository.
+</Aside>
 
-This page focuses on explaining which components are needed and why, rather than listing every build command.
-For actual build scripts and detailed commands, check the README and build documentation in the related repositories.
+## Build Rules
 
-When a build fails, first check whether the Wine version, DXMT version, `mingw` version, and `llvm` version match the baseline in this documentation.
-Compatibility-layer projects are strongly affected by dependency versions, so even small version differences can lead to build errors or runtime issues.
+Source changes should live in tracked patch sets and scripts.
+Temporary files, experiment logs, and local artifacts under `artifacts/` are not release references.
+
+DXMT is managed as an external runtime by default instead of being bundled into the Wine package.
+That allows the launcher to replace or roll back DXMT without rebuilding Wine.
+
+Release builds should not contain temporary diagnostic counters, tracing code, or local experiment patches.
+Debug builds used for measurement and release builds shipped to users should be treated separately.
+
+## Current Baseline
+
+| Component | Baseline |
+| --- | --- |
+| Launcher app | Electron 41, React 19, TypeScript 6, Webpack 5 |
+| Current WineHQ line | `wine-winehq-11.11` |
+| WineHQ comparison/fallback line | `wine-winehq-11` |
+| CrossOver line | `wine-crossover-26.1.0` |
+| DXMT | `v0.80` |
+| Eternal Return DXMT patch | `sanitizeOutput` only |
+
+WineHQ 11.11 is the current WineHQ baseline.
+WineHQ 11.0 is maintained as a comparison and compatibility fallback.
+CrossOver 26.1.0 is a separate runtime line focused on Eternal Return validation.
+
+## When A Build Fails
+
+Start by checking these items:
+
+- Confirm that the command was run from the target repository root.
+- Confirm that the Wine version, DXMT tag, patch set, and toolchain versions match the documented baseline.
+- Confirm that the same patch set can be replayed cleanly after `clean.sh`.
+- Confirm that an old prefix or stale DLLs are not being mixed with the new runtime.
+
+Compatibility-layer projects are sensitive to dependency versions and local prefix state.
+Small version differences or stale prefix-local DLLs can become runtime issues even after a build succeeds.

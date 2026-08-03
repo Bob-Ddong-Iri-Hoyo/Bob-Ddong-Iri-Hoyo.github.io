@@ -1,40 +1,85 @@
 ---
-title: 开始构建
-description: 说明构建 Wine 与 DXMT 所需的基准信息。
+title: 构建文档概览
+description: 说明 BDIH Launcher、Wine 与 DXMT 构建文档的阅读顺序和基准。
+sidebar:
+  order: 1
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
 
-## 构建基准
+## 文档范围
+
+本节面向需要自行构建 Bob-Ddong-Iri-Hoyo 启动器应用、Wine 运行时、DXMT 运行时，或需要了解发布产物结构的维护者。
+如果只是安装启动器并运行游戏，则不需要按照本节自行构建这些组件。
 
 <CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
+  <Card title="BDIH-Launcher">
+    用于构建和打包基于 Electron、React、TypeScript 的 macOS 启动器应用。
   </Card>
-
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
+  <Card title="wine-build">
+    用于构建和打包基于 WineHQ 11.0、WineHQ 11.11、CrossOver 26.1.0 的 Wine 运行时。
+  </Card>
+  <Card title="dxmt-er-build">
+    用于构建带有 Eternal Return（永恒轮回）专用图形修正的 DXMT v0.80 运行时。
   </Card>
 </CardGrid>
 
-本文档整理了 Bob-Ddong-Iri-Hoyo 启动器使用的 Wine 与 DXMT 组件的构建基准，适合想要自行构建或理解构建环境的用户参考。
-如果只是使用启动器，不需要按照本文档自行构建这些组件。
+## 阅读顺序
 
-## 交叉编译器配置
+1. 先阅读 **构建文档概览**，了解整体结构和规则。
+2. 再阅读 **BDIH Launcher 构建**，了解启动器应用的本地构建、打包、测试和发布策略。
+3. 再阅读 **Wine 运行时构建**，了解 WineHQ 与 CrossOver 系列运行时的构建方式。
+4. 再阅读 **DXMT 构建**，了解 Eternal Return 专用 DXMT 补丁和打包流程。
+5. 最后阅读 **发布与元数据**，了解启动器 manifest、artifact 结构和许可证检查。
 
-构建过程中会使用两类用途不同的工具链。
+## 基准仓库
 
-- Wine 构建需要用于生成 Windows 目标二进制文件的 `mingw` 工具链。
-- DXMT 构建需要用于构建 Metal 转换层的 `llvm` 系工具。
+各仓库中的构建命令和补丁应用顺序是事实来源。
+如果文档和脚本看起来不一致，请优先确认脚本。
 
-Wine 使用的 `mingw` 工具链会通过单独准备好的 toolchain 下载后使用。
-DXMT 使用的 `llvm` 则以单独构建的方式为基准，以便与 DXMT 的构建流程保持一致。
-也可以把两者整合到一个公共工具链中，但当前文档会按照 DXMT 教程的流程，将 Wine 与 DXMT 的构建步骤分开说明。
+- Wine 运行时：[Bob-Ddong-Iri-Hoyo/wine-build](https://github.com/Bob-Ddong-Iri-Hoyo/wine-build)
+- DXMT 运行时：[Bob-Ddong-Iri-Hoyo/dxmt-er-build](https://github.com/Bob-Ddong-Iri-Hoyo/dxmt-er-build)
+- 启动器应用：[Bob-Ddong-Iri-Hoyo/BDIH-Launcher](https://github.com/Bob-Ddong-Iri-Hoyo/BDIH-Launcher)
 
-## 如何阅读构建文档
+<Aside type="caution">
+本节中的命令默认从各自源仓库的根目录执行。
+这些命令不是直接在本文档站点仓库中执行的命令。
+</Aside>
 
-本页并不会罗列完整的构建命令，而是重点说明每个组件为什么需要。
-实际构建脚本和详细命令，请同时参考相关仓库的 README 与构建文档。
+## 构建原则
 
-构建失败时，建议先确认正在使用的 Wine 版本、DXMT 版本、`mingw` 与 `llvm` 版本是否符合本文档的基准。
-兼容层项目非常依赖依赖项版本，即使是很小的版本差异，也可能导致构建错误或运行时问题。
+源码变更应保存在可追踪的 patch set 和脚本中。
+`artifacts/` 下的临时结果、实验日志和本地构建产物不是发布基准。
+
+DXMT 默认作为外部运行时管理，而不是直接打进 Wine 包。
+这样启动器可以在不重新构建 Wine 的情况下替换或回滚 DXMT。
+
+发布构建中不应留下临时诊断计数器、追踪代码或本地实验补丁。
+用于测量的 debug build 和面向用户发布的 release build 应分开处理。
+
+## 当前基准
+
+| 组件 | 基准 |
+| --- | --- |
+| 启动器应用 | Electron 41、React 19、TypeScript 6、Webpack 5 |
+| 当前 WineHQ 系列 | `wine-winehq-11.11` |
+| WineHQ 对比/兼容系列 | `wine-winehq-11` |
+| CrossOver 系列 | `wine-crossover-26.1.0` |
+| DXMT | `v0.80` |
+| Eternal Return DXMT 补丁 | 仅 `sanitizeOutput` |
+
+WineHQ 11.11 是当前 WineHQ 系列的基准构建。
+WineHQ 11.0 作为对比和兼容 fallback 系列维护。
+CrossOver 26.1.0 是独立运行时系列，主要用于 Eternal Return 验证。
+
+## 构建失败时
+
+请先检查以下项目：
+
+- 确认命令是在目标仓库根目录执行的。
+- 确认 Wine 版本、DXMT tag、patch set、toolchain 版本与文档基准一致。
+- 确认运行 `clean.sh` 后，相同 patch set 可以干净地重新应用。
+- 确认旧 prefix 或残留 DLL 没有和新运行时混用。
+
+兼容层项目对依赖版本和本地 prefix 状态非常敏感。
+即使构建成功，细小的版本差异或残留的 prefix-local DLL 也可能导致运行时问题。

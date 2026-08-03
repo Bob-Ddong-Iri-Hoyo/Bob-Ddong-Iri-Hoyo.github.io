@@ -1,0 +1,403 @@
+---
+title: BDIH Launcher Build
+description: Local builds, packaging, update testing, and publishing flow for the BDIH-Launcher app.
+sidebar:
+  order: 2
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+## Purpose
+
+This page summarizes how to build and package the app from the `BDIH-Launcher` repository.
+It covers more than the `pnpm build` command: it also folds in the repository's `docs/` notes about release channels, signing, update tests, data preservation, and Bottle execution ownership.
+
+<Aside type="caution">
+Commands on this page are meant to be run from the root of the `BDIH-Launcher` repository.
+They are not commands to run from this documentation site repository.
+</Aside>
+
+## Stack
+
+`BDIH-Launcher` is an Electron app for macOS arm64.
+The build creates JavaScript bundles under `dist/`, then `electron-builder` packages them as `.app`, `.dmg`, and `.zip` outputs.
+
+<CardGrid>
+  <Card title="Main">
+    The Electron main process. It owns Bottle, Wine, DXMT, update, process, log, and preference management.
+  </Card>
+  <Card title="Preload">
+    The IPC bridge between Renderer and Main.
+  </Card>
+  <Card title="Renderer">
+    The React UI. It projects Main-owned snapshots and IPC results.
+  </Card>
+  <Card title="Guardian">
+    A native C helper that cleans up managed Wine processes if the launcher exits unexpectedly.
+  </Card>
+</CardGrid>
+
+| Item | Baseline |
+| --- | --- |
+| Target OS | macOS |
+| Target CPU | `arm64` |
+| Packager | `electron-builder` |
+| UI | React 19 |
+| Language | TypeScript 6 |
+| Bundler | Webpack 5 |
+| Updates | `electron-updater` |
+
+## Preparation
+
+Install dependencies from the lockfile.
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+The repository does not pin a Node.js engine, so use the same Node.js line as CI or the current local maintainer setup and keep the lockfile authoritative.
+macOS packaging and native helper verification require macOS.
+
+## Local Build
+
+The normal build command is:
+
+```bash
+pnpm build
+```
+
+It runs these steps:
+
+```text
+pnpm build:guardian
+pnpm build:preload
+pnpm build:renderer
+pnpm build:main
+```
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm build:guardian` | Builds `native/BDIHGuardian/guardian.c` and prepares the native helper for the app bundle. |
+| `pnpm build:preload` | Builds the Preload script with the production Webpack config. |
+| `pnpm build:renderer` | Builds the React Renderer production bundle. |
+| `pnpm build:main` | Builds the Electron Main process bundle. |
+| `pnpm start` | Starts Electron from the already-built `dist/main/main.js`. |
+| `pnpm start:all` | Builds first, then starts Electron. |
+
+For faster development rebuilds:
+
+```bash
+pnpm build:dev
+pnpm build:dev:renderer
+```
+
+## Packaging
+
+Use `pack` when you only need an unpacked app directory.
+
+```bash
+pnpm pack
+```
+
+Use `dist` when you need distributable `.dmg` and `.zip` artifacts.
+
+```bash
+pnpm dist
+```
+
+The default output directory is `release/`.
+The package includes `dist/**/*`, `package.json`, the app icon, `ko.lproj`, locale files, and the native Guardian helper.
+
+```text
+release/
+  mac-arm64/
+    BDIH Launcher.app
+  BDIH-Launcher-<version>-arm64.dmg
+  BDIH-Launcher-<version>-arm64.zip
+  latest-mac.yml
+  *.blockmap
+```
+
+`electron-builder.config.cjs` handles Stable, Beta, and Nightly from the production config.
+
+| Variable | Purpose |
+| --- | --- |
+| `UPDATE_CHANNEL` | Selects the `latest`, `beta`, or `nightly` update feed. |
+| `RELEASE_TYPE` | Selects GitHub `release` or `prerelease` publishing. |
+| `BDIH_RELEASE_CHANNEL` | Writes the internal channel marker as `stable`, `beta`, or `nightly`. |
+| `BDIH_REQUIRE_CODE_SIGNING` | Requires electron-builder signing when set to `true`. |
+| `PUBLISH_REPOSITORY` | Overrides the GitHub repository used by electron-builder publish. |
+
+Nightly uses the `BDIH Launcher Nightly` product name and `day.faby.bdih-launcher.nightly` bundle identifier.
+Stable and Beta share the normal `BDIH Launcher` product name and `day.faby.bdih-launcher` bundle identifier.
+
+## Staging Builds
+
+Staging is not the production app with a different title.
+`electron-builder.staging.config.cjs` uses a separate product name, bundle identifier, and app data.
+
+| Item | Value |
+| --- | --- |
+| Product name | `BDIH Launcher Staging` |
+| Bundle ID | `day.faby.bdih-launcher.staging` |
+| Default release repository | `Bob-Ddong-Iri-Hoyo/BDIH-Launcher-TestProduction` |
+| Stable feed | `latest` |
+| Beta feed | `beta` |
+
+The CI workflow injects these values:
+
+```text
+BDIH_STAGING_VERSION
+BDIH_STAGING_CHANNEL
+BDIH_STAGING_SOURCE_COMMIT
+BDIH_STAGING_OUTPUT_DIR
+```
+
+Staging artifact names omit the architecture because staging is currently arm64-only.
+
+```text
+BDIH-Launcher-Staging-Stable-1.0.0-rc.2.dmg
+BDIH-Launcher-Staging-Stable-1.0.0-rc.2.zip
+BDIH-Launcher-Staging-Beta-1.0.0-beta.1.staging.2.dmg
+BDIH-Launcher-Staging-Beta-1.0.0-beta.1.staging.2.zip
+```
+
+## Update Test Builds
+
+The update UI and Squirrel.Mac flow should be tested separately from normal tag releases.
+The local update test app uses isolated identity and storage.
+
+| Item | Stable/Beta test value |
+| --- | --- |
+| Product name | `BDIH Launcher Update Test` |
+| Bundle ID | `day.faby.bdih-launcher.update-test` |
+| App location | `tests/Release/apps/stable-beta/BDIH Launcher Update Test.app` |
+| State root | `tests/Release/state/stable-beta` |
+| Local feed | `http://127.0.0.1:45678/` |
+
+Nightly update testing uses its own product name and bundle identifier.
+
+```text
+BDIH Launcher Nightly Update Test
+day.faby.bdih-launcher.nightly.update-test
+```
+
+Build test artifacts with:
+
+```bash
+pnpm run build:test -- --version 1.0.0 --channel stable
+pnpm run build:test -- --version 1.1.0-beta.1 --channel beta
+pnpm run build:test:nightly -- --version 1.2.0-nightly.1
+```
+
+Ranges are supported.
+
+```bash
+pnpm run build:test:stable -- --range 1.0.0~1.0.9
+pnpm run build:test:beta -- --range 1.1.0-beta.1~1.1.0-beta.9
+```
+
+Run the local feed and open the installed test app.
+
+```bash
+pnpm update:test:serve
+pnpm install:test
+pnpm reveal:test
+pnpm start:test
+```
+
+Nightly uses:
+
+```bash
+pnpm install:test:nightly
+pnpm reveal:test:nightly
+pnpm start:test:nightly
+```
+
+The update test app is designed to reject production Bottle, Wine, and DXMT paths.
+Do not copy production settings into the test state directory.
+
+## Tests
+
+The default test command runs Jest.
+
+```bash
+pnpm test
+```
+
+Build-related checks:
+
+| Command | What it checks |
+| --- | --- |
+| `pnpm test:guardian` | Guardian clean disarm, EOF, owner exit, and signal cleanup behavior. |
+| `pnpm test:guardian:app` | Electron plus Guardian startup recovery and single-instance behavior. |
+| `pnpm test:update-build-script` | Version and range handling for update-test artifacts. |
+| `pnpm test:staging-promotion-policy` | Staging candidate and production promotion policy. |
+| `pnpm test:signing-script` | `.p12` creation, conversion, and renewal flow. |
+| `pnpm test:hoyo-proxy:build` | Builds the HoYoPlay proxy helper in the `wine-build` repository. |
+
+Renderer UI can be inspected through Storybook.
+
+```bash
+pnpm storybook
+pnpm build-storybook
+pnpm screenshot
+```
+
+`pnpm screenshot` captures the launcher shell story from the static Storybook build.
+
+```text
+output/screenshot/launcher-view.png
+```
+
+## macOS Signing
+
+Publishing workflows install the `BDIH Launcher Update Signing` identity into a temporary Keychain and require electron-builder to sign the app bundle with it.
+Missing or invalid secrets fail the build instead of silently falling back to ad-hoc signing.
+
+| Secret | Purpose |
+| --- | --- |
+| `MACOS_SIGNING_P12_BASE64` | Base64 value of the signing `.p12`. |
+| `MACOS_SIGNING_P12_PASSWORD` | Export password for the `.p12`. |
+| `STAGING_RELEASE_TOKEN` | Fine-grained token used to upload release assets to the TestProduction repository. |
+
+Generate a local `.p12` with:
+
+```bash
+./scripts/createP12.sh --copy-base64
+```
+
+This identity is a self-signed update identity for Squirrel.Mac update continuity.
+It is not an Apple Developer ID signature or notarization trust.
+
+## Release Flow
+
+Production Stable and Beta releases are promoted from verified TestProduction candidates.
+They are not created by manually pushing a production tag.
+
+| Environment | Purpose |
+| --- | --- |
+| `production-candidate-approval` | Allows creation of an unpublished Production Draft after a TestProduction candidate is reviewed. |
+| `production-release` | Publishes the already-created Draft after it is reverified. |
+
+Stable flow:
+
+```text
+prepare package.json version
+  -> run TestProduction Candidate
+  -> create rc.N candidate
+  -> test candidate
+  -> approve production-candidate-approval
+  -> create Production Draft
+  -> approve production-release
+  -> publish v<version>
+```
+
+Beta releases keep the release train in `package.json` and inject the Beta number through workflow inputs.
+The staging suffix does not enter the production version.
+
+```text
+package.json:             1.2.3
+TestProduction candidate: 1.2.3-beta.2.staging.3
+Production release:       1.2.3-beta.2
+```
+
+Stable candidates use:
+
+```text
+package.json:             1.2.3
+TestProduction candidate: 1.2.3-rc.2
+Production release:       1.2.3
+```
+
+Candidate tags and releases are treated as immutable.
+If a target needs a change, publish the next attempt instead of replacing the old tag.
+
+```text
+1.0.0-rc.1 -> 1.0.0-rc.2
+1.0.0-beta.1.staging.1 -> 1.0.0-beta.1.staging.2
+```
+
+## Channels And Data
+
+Stable, Beta, and Nightly affect update feeds and app-data cleanup.
+The launcher records the last successfully opened app version and channel in `app-data-lifecycle.json`.
+
+Retired-file cleanup is allowed only when the version changes within the same channel.
+
+| Previous build | Current build | Retired-file cleanup |
+| --- | --- | --- |
+| Stable | Stable | Allowed |
+| Beta | Beta | Allowed |
+| Nightly | Nightly | Allowed |
+| Stable | Beta | Preserved |
+| Beta | Stable | Preserved |
+| First launch | Any | Preserved |
+| Same version | Same channel | Skipped |
+
+Cleanup is allowlist-based.
+Wine registries, prefixes, drives, and unknown files must not be deleted only because the current build no longer reads them.
+Stable/Beta transitions create channel snapshots and continue only after compatibility checks pass.
+
+## Bottle Execution
+
+The launcher build includes the native Guardian and Main-owned execution state.
+This matters because the app directly manages Wine process lifecycle, not just UI.
+
+```text
+Renderer
+  -> IPCManager
+  -> BottleExecutionManager
+  -> BottleExecutionStateRegistry
+  -> Wine/DXMT/Jadeite/process helpers
+  -> Renderer snapshot projection
+```
+
+The Main process is the final authority for application launch ownership.
+Renderer does not decide process lifetime or duplicate launch suppression; it renders the versioned snapshot provided by Main.
+
+Concurrent requests for the same logical target are joined into one launch promise.
+Already-running targets return the existing logical process ID, and stopping targets return a retryable failure.
+
+## Wine Telemetry And Providers
+
+New Wine runtimes can expose `bdih.wine.process.v1` process telemetry.
+The launcher injects FIFO environment variables only when runtime metadata declares the exact capability.
+
+```text
+WINE_BDIH_PROCESS_TELEMETRY=1
+WINE_BDIH_PROCESS_PIPE=/absolute/path/to/process-events.fifo
+```
+
+Wine reports process facts only.
+The launcher classifies whether a process is Steam, HoYoPlay, an updater, or a game.
+When telemetry is unavailable, the existing wineserver observer and process discovery remain fallbacks.
+
+Execution is gradually moving toward a Provider/Strategy model.
+Application profiles and strategies under `src/Main/Data` declare requirements, and `BottleExecutionManager` evaluates those requirements before performing side effects.
+
+Current application-owned Strategy coverage includes:
+
+- Generic Wine application launch and installer execution
+- Steam launcher installation, launcher execution, and Steam game execution
+- HoYoPlay installation and supervised execution
+- ZZZ, Genshin, and Star Rail execution requirements
+
+## docs/ Map
+
+The `docs/` directory in `BDIH-Launcher` has these roles.
+
+| Document | Role |
+| --- | --- |
+| `docs/build.md` | Currently an empty placeholder. Package scripts and packaging config are the build source of truth. |
+| `docs/release.md` | Stable/Beta production promotion, candidate safety rules, and version rules. |
+| `docs/publish.md` | macOS signing, GitHub secrets, staging candidates, and certificate renewal. |
+| `docs/update-testing.md` | Update checker UI, mock feeds, and signing-certificate transition tests. |
+| `docs/test.md` | Isolated update test app, local feed, and Stable/Beta/Nightly update scenarios. |
+| `docs/data-lifecycle.md` | Channel-safe cleanup, app-data ownership, and snapshot rules. |
+| `docs/bottle-execution.md` | Bottle execution, Guardian, execution state, and Provider/Strategy migration. |
+| `docs/TODO/wine-process-telemetry.md` | Wine process telemetry prototype and remaining validation items. |
+| `docs/TODO/bottle-app-launch-deduplication.md` | Duplicate launch prevention and logical target ownership rules. |
+
+When changing launcher builds or publishing behavior, do not stop at `pnpm build`.
+Check the relevant docs policy and test path for the area you changed.

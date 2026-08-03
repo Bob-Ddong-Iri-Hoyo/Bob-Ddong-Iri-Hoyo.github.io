@@ -1,40 +1,135 @@
 ---
-title: バージョニング
-description: バブトンイリホヨのバージョン管理を説明します。
+title: リリースとメタデータ
+description: Wine と DXMT の artifact、launcher manifest、ライセンス基準を説明します。
+sidebar:
+  order: 5
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-## ビルド基準
+## artifact 名
 
-<CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
-  </Card>
+Wine runtime artifact は、runtime ディレクトリ、tarball、checksum、sidecar JSON を一緒に生成します。
 
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
-  </Card>
-</CardGrid>
+```text
+artifacts/wine-$BUILD_NAME/
+  wine-$BUILD_NAME-build/
+  wine-$BUILD_NAME-install/
+  wine-$BUILD_NAME/
+  wine-$BUILD_NAME.tar.gz
+  wine-$BUILD_NAME.tar.gz.sha256
+  wine-$BUILD_NAME.json
+```
 
-このドキュメントは、バブトンイリホヨ ランチャーで使用する Wine と DXMT の構成要素を自分でビルドしたい、またはビルド環境を理解したいユーザー向けに基準情報を整理したものです。
-ランチャーだけを使用する場合、このドキュメントに従ってビルドする必要はありません。
+現在の基準名は次のとおりです。
 
-## クロスコンパイラ構成
+| BUILD_NAME | 配布名 |
+| --- | --- |
+| `winehq-11.11` | `wine-winehq-11.11` |
+| `winehq-11` | `wine-winehq-11` |
+| `crossover-26.1.0` | `wine-crossover-26.1.0` |
 
-ビルド過程では、目的の異なる 2 種類のツールチェーンが使われます。
+DXMT runtime は別 artifact として管理します。
 
-- Wine のビルドには、Windows ターゲットのバイナリを作成するための `mingw` ツールチェーンが必要です。
-- DXMT のビルドには、Metal 変換レイヤーをビルドするための `llvm` ベースのツールが必要です。
+```text
+artifacts/dxmt-v0.80-builtin.tar.gz
+artifacts/dxmt-v0.80-builtin.tar.gz.sha256
+```
 
-Wine 用の `mingw` ツールチェーンは、別途用意された toolchain をダウンロードして使用します。
-DXMT 用の `llvm` は、DXMT のビルド手順に合わせるため、別途ビルドする方式を基準にしています。
-両方を 1 つの共通ツールチェーンに統合することもできますが、現在のドキュメントでは DXMT チュートリアルの流れに沿って、Wine と DXMT のビルド手順を分けて説明します。
+## launcher metadata
 
-## ビルド文書の読み方
+Wine package 段階では、ランチャーが読む metadata を runtime 内部と artifact の横に書き出します。
 
-このページは、すべてのビルドコマンドを並べるのではなく、どの構成要素がなぜ必要なのかを理解することに焦点を置いています。
-実際のビルドスクリプトや詳細なコマンドは、関連リポジトリの README とビルド文書もあわせて確認してください。
+```text
+<WINE_ROOT>/share/bdhi/launcher-options.json
+artifacts/wine-$BUILD_NAME/wine-$BUILD_NAME.json
+```
 
-ビルドが失敗した場合は、まず使用している Wine バージョン、DXMT バージョン、`mingw` と `llvm` のバージョンがこのドキュメントの基準と一致しているか確認することをおすすめします。
-互換レイヤーのプロジェクトは依存関係のバージョンに大きく影響されるため、小さなバージョン差でもビルドエラーや実行時問題につながることがあります。
+metadata ファイルの選択順序は次のとおりです。
+
+```text
+BDHI_LAUNCHER_OPTIONS_FILE
+metadata/bdhi-launcher-options.$BUILD_NAME.json
+metadata/bdhi-launcher-options.$PATCH_SET.json
+metadata/bdhi-launcher-options.json
+```
+
+ランチャーは、展開済み runtime 内部の manifest を優先して使います。
+ダウンロード前の一覧表示には artifact 横の sidecar JSON を使えます。
+新しい runtime flavor を追加するときは、意図的に既存 patch-set manifest を共有する場合を除き、専用 metadata ファイルを用意するのが基本です。
+
+<Aside type="caution">
+metadata だけを編集しても、すでに生成された artifact は自動では変わりません。
+manifest の変更を配布する場合は package 段階を再実行してください。
+</Aside>
+
+## capabilities 基準
+
+metadata の `capabilities` はランチャー内部の契約です。
+通常のユーザー設定として表示するものではありません。
+
+process telemetry capability は、Wine server process table を prefix-scoped FIFO へ送るための契約です。
+
+```json
+{
+  "protocol": 1,
+  "transport": "fifo",
+  "activationEnvironment": "WINE_BDIH_PROCESS_TELEMETRY",
+  "pipeEnvironment": "WINE_BDIH_PROCESS_PIPE"
+}
+```
+
+Wine は process lifecycle fact だけを報告します。
+そのプロセスがインストーラー、ランチャー、ゲーム、helper のどれかを分類する責任は、バブトンイリホヨ ランチャー側にあります。
+
+WineHQ 系列の metadata は HoYoPlay proxy capability も宣言します。
+宣言された helper が artifact 内にない場合は、不完全な runtime として明確に失敗させるのがよいです。
+
+## process telemetry ポリシー
+
+process telemetry は Steam や HoYoPlay だけに結び付いた機能ではありません。
+prefix 全体の Wine process lifecycle を報告する共通機能です。
+
+有効化には次の環境変数を使います。
+
+```text
+WINE_BDIH_PROCESS_TELEMETRY=1
+WINE_BDIH_PROCESS_PIPE=/absolute/native/path/to/process-events.fifo
+```
+
+FIFO は `0600` 権限で作成します。
+command line には token やユーザーパスが含まれる可能性があるため、raw payload をそのままログに残さない方がよいです。
+reader がない、pipe が満杯、write に失敗した場合、Wine はイベントを捨てるべきです。
+telemetry が原因で Wine process や wineserver が遅延または失敗してはいけません。
+
+## ライセンスと配布
+
+Wine runtime archive には third-party binary が含まれます。
+リポジトリ自体のライセンスと runtime 配布上の義務は別に扱う必要があります。
+
+package 段階では runtime 内に次の license bundle を生成します。
+
+```text
+<WINE_ROOT>/share/licenses/
+  README.md
+  BUILD-PROVENANCE.txt
+  source/
+  homebrew/
+  dwproton/
+  dxmt/
+```
+
+`dwproton/` は WineHQ Proton extras を含める場合に使います。
+`dxmt/` は DXMT を明示的に bundle する場合だけ使います。
+GStreamer、FFmpeg、x264、x265 などの multimedia component は Homebrew 更新で依存関係とライセンス構成が変わることがあるため、リリース前に再確認してください。
+
+## リリースチェック
+
+リリース前に次の項目を確認します。
+
+- `clean.sh` 後に同じ patch set を再適用できるか確認します。
+- 一時的な debug counter、tracing、local-only patch が release source に残っていないか確認します。
+- tarball、`.sha256`、sidecar JSON が同じビルド結果を指しているか確認します。
+- runtime 内部の `share/bdhi/launcher-options.json` と sidecar JSON が一致しているか確認します。
+- `share/licenses/` が実際に含まれる binary と一致しているか確認します。
+- Steam、Eternal Return、HoYoPlay backend など、その runtime が宣言した workload を再確認します。

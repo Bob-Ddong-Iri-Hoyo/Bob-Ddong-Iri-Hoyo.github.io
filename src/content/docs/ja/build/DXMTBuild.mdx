@@ -1,40 +1,142 @@
 ---
-title: ビルドを始める
-description: Wine と DXMT のビルドに必要な基準情報を説明します。
+title: DXMT ビルド
+description: dxmt-er-build リポジトリの DXMT v0.80 ビルドと Eternal Return パッチを説明します。
+sidebar:
+  order: 4
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-## ビルド基準
+## ビルド目的
 
-<CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
-  </Card>
+`dxmt-er-build` リポジトリは、Eternal Return 専用の pixel output sanitization パッチを適用した DXMT `v0.80` ランタイムをビルドします。
+このパッチは、Eternal Return で観測された閃光や壊れたグラフィック表示を減らすための補正です。
 
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
-  </Card>
-</CardGrid>
+パッチは `d3d11.sanitizeOutput` オプションを追加し、`EternalReturn.exe` にだけ既定で適用します。
+`dxgi.forceSDR`、`sampleNaNToZero`、`defuseFma` などの他の実験オプションは有効にしません。
 
-このドキュメントは、バブトンイリホヨ ランチャーで使用する Wine と DXMT の構成要素を自分でビルドしたい、またはビルド環境を理解したいユーザー向けに基準情報を整理したものです。
-ランチャーだけを使用する場合、このドキュメントに従ってビルドする必要はありません。
+<Aside type="caution">
+これは Wine core patch ではありません。
+DXMT の shader 変換経路に入るアプリ別補正であり、他のゲームの D3D 動作を変えないよう Eternal Return に限定します。
+</Aside>
 
-## クロスコンパイラ構成
+## 準備
 
-ビルド過程では、目的の異なる 2 種類のツールチェーンが使われます。
+macOS、Xcode Command Line Tools、`git`、`curl`、`cmake`、`meson`、`ninja` が必要です。
+また、builtin Wine DLL と `.so` を作るために Wine build tree が必要です。
 
-- Wine のビルドには、Windows ターゲットのバイナリを作成するための `mingw` ツールチェーンが必要です。
-- DXMT のビルドには、Metal 変換レイヤーをビルドするための `llvm` ベースのツールが必要です。
+既定の Wine build tree パスは次のとおりです。
 
-Wine 用の `mingw` ツールチェーンは、別途用意された toolchain をダウンロードして使用します。
-DXMT 用の `llvm` は、DXMT のビルド手順に合わせるため、別途ビルドする方式を基準にしています。
-両方を 1 つの共通ツールチェーンに統合することもできますが、現在のドキュメントでは DXMT チュートリアルの流れに沿って、Wine と DXMT のビルド手順を分けて説明します。
+```text
+./wine-build/build64
+```
 
-## ビルド文書の読み方
+別のパスを使う場合は `WINE_BUILD` で指定します。
 
-このページは、すべてのビルドコマンドを並べるのではなく、どの構成要素がなぜ必要なのかを理解することに焦点を置いています。
-実際のビルドスクリプトや詳細なコマンドは、関連リポジトリの README とビルド文書もあわせて確認してください。
+```bash
+WINE_BUILD=/path/to/wine-build/build64 ./scripts/build-dxmt.sh
+```
 
-ビルドが失敗した場合は、まず使用している Wine バージョン、DXMT バージョン、`mingw` と `llvm` のバージョンがこのドキュメントの基準と一致しているか確認することをおすすめします。
-互換レイヤーのプロジェクトは依存関係のバージョンに大きく影響されるため、小さなバージョン差でもビルドエラーや実行時問題につながることがあります。
+## ビルド順序
+
+まず DXMT 用 toolchain を準備し、DXMT source を取得します。
+
+```bash
+./scripts/fetch-toolchains.sh
+./scripts/fetch-dxmt.sh
+```
+
+次に Wine build tree を指定して DXMT runtime をビルドします。
+
+```bash
+WINE_BUILD=/path/to/wine-build/build64 ./scripts/build-dxmt.sh
+```
+
+既定パスに Wine build tree をつないでいる場合は、次のように実行できます。
+
+```bash
+./scripts/build-dxmt.sh
+```
+
+## 出力
+
+ビルド後は `dxmt-runtime` と tarball artifact が生成されます。
+
+```text
+dxmt-runtime/
+  i386-windows/
+  x86_64-windows/
+  x86_64-unix/
+
+artifacts/
+  dxmt-v0.80-builtin.tar.gz
+  dxmt-v0.80-builtin.tar.gz.sha256
+```
+
+archive は `dxmt-v0.80-builtin/` ディレクトリとして展開されます。
+runtime と archive には、関連する DXMT と third-party license ファイルが含まれます。
+
+## インストールと override
+
+Wine Stable のレイアウトにインストールする場合は、インストールスクリプトを使用できます。
+既存ファイルは timestamp 付きの backup として保存されます。
+
+```bash
+./scripts/install-to-wine-stable.sh
+```
+
+Wine では DXMT DLL を builtin 優先で使うよう override を設定します。
+
+```text
+d3d10core = builtin,native
+d3d11     = builtin,native
+dxgi      = builtin,native
+winemetal = builtin,native
+```
+
+ランチャーに統合する場合は、Wine root と prefix-local DLL が同じ DXMT バージョンになるよう管理してください。
+古い prefix-local DLL が残っていると、新しい runtime を入れても古い DXMT が読み込まれる可能性があります。
+
+## Eternal Return 補正方式
+
+診断結果では、この可視問題は Wine の一般的な pointer truncation、row pitch、stride、buffer size 問題ではなく、D3D shader が macOS graphics backend へ変換される境界で起きる浮動小数点互換性の問題に近いと整理されています。
+
+現在の補正は、pixel shader output に NaN や Inf のような non-finite 値が入った場合、それを `0.0` に置き換えます。
+概念的な流れは次のとおりです。
+
+```text
+game DXBC pixel shader
+  -> DXMT LLVM/AIR conversion
+  -> injected non-finite output epilogue
+  -> Metal shader compilation
+  -> GPU execution
+  -> render-target write
+```
+
+この処理は branchless select に近く、コストは予測しやすいものの完全に無料ではありません。
+また、D3D conformance の観点では NaN/Inf が float render target に残る必要がある場合があるため、グローバル既定値にはしません。
+
+## 検証
+
+Eternal Return で A/B テストを行う場合は、shader cache を無効にして sanitizer の有効/無効を比較します。
+
+```bash
+DXMT_SHADER_CACHE=0 /path/to/your/steam-launcher.sh
+DXMT_SHADER_CACHE=0 DXMT_DISABLE_OUTPUT_SANITIZE=1 /path/to/your/steam-launcher.sh
+```
+
+1 つ目のコマンドは sanitizer が有効な経路を確認します。
+2 つ目のコマンドは補正を無効化した比較実行です。
+
+## 診断ビルド
+
+CrossOver 26.1.0 向けには別の diagnostic build もあります。
+これは shader DXBC dump、DXMT log、Xcode `.gputrace` capture、non-finite output marker を取得するためのものです。
+
+```bash
+./scripts/build-crossover-26.1.0-diagnostic.sh
+./scripts/test-crossover-26.1.0-diagnostic.sh
+```
+
+診断 marker は問題 pixel を白く表示して位置を確認するための道具です。
+ユーザー向けの修正ではなく、release build には診断 marker や tracing code を含めない方針です。

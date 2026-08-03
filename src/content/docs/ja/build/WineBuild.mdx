@@ -1,40 +1,147 @@
 ---
-title: ビルドを始める
-description: Wine と DXMT のビルドに必要な基準情報を説明します。
+title: Wine ランタイムのビルド
+description: wine-build リポジトリの WineHQ と CrossOver ランタイムのビルド手順を説明します。
+sidebar:
+  order: 3
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-## ビルド基準
+## 提供ランタイム
 
-<CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
-  </Card>
+`wine-build` リポジトリは、バブトンイリホヨ ランチャーで使用する macOS 向け Wine ランタイムを再現可能にビルドしてパッケージングするためのパイプラインです。
+現在は 3 つのランタイム系列を維持しています。
 
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
-  </Card>
-</CardGrid>
+| ランタイム | ビルドコマンド | 出力先 |
+| --- | --- | --- |
+| `wine-winehq-11.11` | `./scripts/winehq-11.11/build-all.sh` | `artifacts/wine-winehq-11.11/wine-winehq-11.11` |
+| `wine-winehq-11` | `./scripts/winehq-11/build-all.sh` | `artifacts/wine-winehq-11/wine-winehq-11` |
+| `wine-crossover-26.1.0` | `./scripts/crossover-26.1.0/build-all.sh` | `artifacts/wine-crossover-26.1.0/wine-crossover-26.1.0` |
 
-このドキュメントは、バブトンイリホヨ ランチャーで使用する Wine と DXMT の構成要素を自分でビルドしたい、またはビルド環境を理解したいユーザー向けに基準情報を整理したものです。
-ランチャーだけを使用する場合、このドキュメントに従ってビルドする必要はありません。
+WineHQ 11.11 は現在の WineHQ 系列の基準ビルドです。
+WineHQ 11.0 は比較と互換性のための別ラインです。
+CrossOver 26.1.0 は CrossOver ベースの独立した patch set を適用する別ラインで、WineHQ 専用の DWProton extras や HoYoPlay proxy は既定では含めません。
 
-## クロスコンパイラ構成
+## 準備
 
-ビルド過程では、目的の異なる 2 種類のツールチェーンが使われます。
+macOS でのビルドを前提にしています。
+まず Homebrew の依存関係と共有 toolchain を準備します。
 
-- Wine のビルドには、Windows ターゲットのバイナリを作成するための `mingw` ツールチェーンが必要です。
-- DXMT のビルドには、Metal 変換レイヤーをビルドするための `llvm` ベースのツールが必要です。
+```bash
+./scripts/common/install-brew-deps.sh
+./scripts/common/fetch-toolchain.sh
+```
 
-Wine 用の `mingw` ツールチェーンは、別途用意された toolchain をダウンロードして使用します。
-DXMT 用の `llvm` は、DXMT のビルド手順に合わせるため、別途ビルドする方式を基準にしています。
-両方を 1 つの共通ツールチェーンに統合することもできますが、現在のドキュメントでは DXMT チュートリアルの流れに沿って、Wine と DXMT のビルド手順を分けて説明します。
+各 `build-all.sh` も共有 toolchain の準備を呼び出します。
+初回ビルド時に上のコマンドを先に実行しておくと、依存関係の問題とランタイムビルドの問題を切り分けやすくなります。
 
-## ビルド文書の読み方
+## ビルド
 
-このページは、すべてのビルドコマンドを並べるのではなく、どの構成要素がなぜ必要なのかを理解することに焦点を置いています。
-実際のビルドスクリプトや詳細なコマンドは、関連リポジトリの README とビルド文書もあわせて確認してください。
+対象ランタイムに合わせて `build-all.sh` を実行します。
 
-ビルドが失敗した場合は、まず使用している Wine バージョン、DXMT バージョン、`mingw` と `llvm` のバージョンがこのドキュメントの基準と一致しているか確認することをおすすめします。
-互換レイヤーのプロジェクトは依存関係のバージョンに大きく影響されるため、小さなバージョン差でもビルドエラーや実行時問題につながることがあります。
+```bash
+./scripts/winehq-11.11/build-all.sh
+./scripts/winehq-11/build-all.sh
+./scripts/crossover-26.1.0/build-all.sh
+```
+
+patch をきれいに再適用したい場合は、対象ランタイムの `clean.sh` を先に実行します。
+
+```bash
+./scripts/winehq-11.11/clean.sh
+./scripts/winehq-11.11/build-all.sh
+```
+
+`clean.sh` は選択した flavor の source と output を削除しますが、共有 download cache と toolchain は残します。
+patch 適用状態を検証する場合は、`--keep-source` を使わず clean build を行うのが無難です。
+
+## ビルドパイプライン
+
+CrossOver 系列は次の流れでビルドされます。
+
+```text
+common/fetch-toolchain.sh
+crossover-26.1.0/fetch-source.sh
+crossover-26.1.0/apply-patches.sh
+crossover-26.1.0/configure.sh
+common/build.sh
+common/install.sh
+common/package.sh
+```
+
+WineHQ 系列では DWProton extras と HoYoPlay proxy も準備します。
+
+```text
+common/fetch-toolchain.sh
+BDIH-HelperProgram/hoyoplay-proxy/build.sh
+winehq-*/fetch-source.sh
+winehq-*/apply-patches.sh
+winehq-*/fetch-dwproton-source.sh
+winehq-*/prepare-dwproton-lsteamclient.sh
+winehq-*/configure.sh
+common/build.sh
+winehq-*/build-proton-steam.sh
+common/install.sh
+common/package.sh
+```
+
+WineHQ パッケージには DWProton `steam.exe`、`lsteamclient`、HoYoPlay proxy、GStreamer、macOS msync、Steam CEF 互換パッチ、HoYoPlay routing backend が含まれます。
+CrossOver パッケージには Steam と object-directory の互換パッチ、共有 process telemetry パッチが含まれますが、WineHQ 専用 extras は既定では含まれません。
+
+## Steam 基準
+
+WineHQ 系列と CrossOver 系列は、対象となる `steamwebhelper.exe` プロセスに次の Steam UI 安定化引数を適用します。
+
+```text
+--no-sandbox --in-process-gpu --disable-gpu
+```
+
+この引数は `steam.exe` 本体には付けません。
+また、crashpad handler と host-resolver helper には注入しません。
+Steam overlay DLL override は Wine patch の一部ではないため、overlay 比較が必要な場合は別途指定します。
+
+## HoYoPlay 基準
+
+WineHQ 系列には、HoYoPlay が起動しようとするゲーム child process を検出し、ランチャーが別の game prefix で実際のゲームを起動できるよう route event を送る backend が含まれます。
+この構造では、HoYoPlay のログインと更新状態を launcher prefix に置き、DXMT、media、HoYoProtect、msync などのゲーム別状態を game prefix に分離します。
+
+これは Wine だけで完結するエンドユーザー向けフローではありません。
+バブトンイリホヨ ランチャーが prefix 作成、イベント検証、game profile 準備、実際の起動、プロセス追跡を担当する必要があります。
+
+## Eternal Return 関連メモ
+
+WineHQ 11.11 では、Eternal Return 実行中に WineHQ 11.0 より高い `set_timer` と `select` の wineserver request が観測された記録があります。
+この文書では、これを確定した regression や release blocker ではなく、CPU と発熱余裕に影響し得る性能調査項目として扱います。
+
+リリースビルドに一時的な request counter を残してはいけません。
+frametime 改善が測定され、Steam と HoYoverse workload で回帰がないことを確認した後にだけ、変更を release patch set に入れる方針です。
+
+## オプションと出力
+
+共通 override の例です。
+
+```bash
+BUILD_NAME=winehq-11-test ./scripts/winehq-11/build-all.sh
+BREW_PREFIX="$(brew --prefix)" ./scripts/crossover-26.1.0/build-all.sh
+BUNDLE_PROTON_EXTRAS=0 ./scripts/winehq-11/build-all.sh
+BUNDLE_DXMT_RUNTIME=1 \
+DXMT_RUNTIME_DIR=/path/to/dxmt-runtime \
+./scripts/winehq-11.11/build-all.sh
+```
+
+パッケージング結果は次の構造で生成されます。
+
+```text
+artifacts/wine-$BUILD_NAME/
+  wine-$BUILD_NAME-build/
+  wine-$BUILD_NAME-install/
+  wine-$BUILD_NAME/
+  wine-$BUILD_NAME.tar.gz
+  wine-$BUILD_NAME.tar.gz.sha256
+  wine-$BUILD_NAME.json
+```
+
+<Aside type="tip">
+DXMT は既定では Wine パッケージに含めません。
+`BUNDLE_DXMT_RUNTIME=1` は、専用の検証や特殊なパッケージングが必要な場合だけ使用します。
+</Aside>

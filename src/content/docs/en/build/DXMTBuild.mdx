@@ -1,40 +1,142 @@
 ---
-title: Getting Started with Builds
-description: Baseline information required to build Wine and DXMT.
+title: DXMT Build
+description: DXMT v0.80 builds and the Eternal Return patch in dxmt-er-build.
+sidebar:
+  order: 4
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-## Build Baseline
+## Purpose
 
-<CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
-  </Card>
+The `dxmt-er-build` repository builds a DXMT `v0.80` runtime with an Eternal Return specific pixel output sanitization patch.
+The patch is intended to reduce the flashing and broken graphics observed in Eternal Return.
 
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
-  </Card>
-</CardGrid>
+It adds the `d3d11.sanitizeOutput` option and enables it by default only for `EternalReturn.exe`.
+It does not enable other experimental options such as `dxgi.forceSDR`, `sampleNaNToZero`, or `defuseFma`.
 
-This document summarizes the baseline information for users who want to build the Wine and DXMT components used by the Bob-Ddong-Iri-Hoyo launcher, or understand the build environment.
-If you only use the launcher, you do not need to build these components yourself.
+<Aside type="caution">
+This is not a Wine core patch.
+It is an app-specific workaround in the DXMT shader translation path, kept limited to Eternal Return so other games do not receive changed D3D behavior.
+</Aside>
 
-## Cross-Compiler Setup
+## Preparation
 
-The build process uses two toolchains for different purposes.
+The build requires macOS, Xcode Command Line Tools, `git`, `curl`, `cmake`, `meson`, and `ninja`.
+A Wine build tree is also required to build the builtin Wine DLLs and `.so` files.
 
-- Wine builds require a `mingw` toolchain for producing Windows-targeted binaries.
-- DXMT builds require `llvm`-based tools for building the Metal translation layer.
+The default Wine build tree path is:
 
-The `mingw` toolchain for Wine is downloaded from a separately prepared toolchain package.
-The `llvm` setup for DXMT is treated as a separate build so it stays aligned with the DXMT build flow.
-These setups could be merged into one shared toolchain, but this documentation currently follows the DXMT tutorial flow and separates the Wine and DXMT build steps.
+```text
+./wine-build/build64
+```
 
-## How to Read the Build Docs
+Use `WINE_BUILD` when the tree is elsewhere.
 
-This page focuses on explaining which components are needed and why, rather than listing every build command.
-For actual build scripts and detailed commands, check the README and build documentation in the related repositories.
+```bash
+WINE_BUILD=/path/to/wine-build/build64 ./scripts/build-dxmt.sh
+```
 
-When a build fails, first check whether the Wine version, DXMT version, `mingw` version, and `llvm` version match the baseline in this documentation.
-Compatibility-layer projects are strongly affected by dependency versions, so even small version differences can lead to build errors or runtime issues.
+## Build Steps
+
+Fetch the DXMT toolchains and source first.
+
+```bash
+./scripts/fetch-toolchains.sh
+./scripts/fetch-dxmt.sh
+```
+
+Then build the DXMT runtime with the Wine build tree.
+
+```bash
+WINE_BUILD=/path/to/wine-build/build64 ./scripts/build-dxmt.sh
+```
+
+If the Wine build tree is linked at the default path, run:
+
+```bash
+./scripts/build-dxmt.sh
+```
+
+## Outputs
+
+The build produces a `dxmt-runtime` directory and a tarball artifact.
+
+```text
+dxmt-runtime/
+  i386-windows/
+  x86_64-windows/
+  x86_64-unix/
+
+artifacts/
+  dxmt-v0.80-builtin.tar.gz
+  dxmt-v0.80-builtin.tar.gz.sha256
+```
+
+The archive extracts into `dxmt-v0.80-builtin/`.
+The runtime and archive include the relevant DXMT and third-party license files.
+
+## Install And Overrides
+
+Use the install script when installing into a Wine Stable layout.
+Existing files are preserved in timestamped backups.
+
+```bash
+./scripts/install-to-wine-stable.sh
+```
+
+Configure Wine to prefer the builtin DXMT DLLs.
+
+```text
+d3d10core = builtin,native
+d3d11     = builtin,native
+dxgi      = builtin,native
+winemetal = builtin,native
+```
+
+When integrating with the launcher, keep the Wine root and prefix-local DLLs on the same DXMT version.
+Stale prefix-local DLLs can cause an older DXMT build to load even after a new runtime is installed.
+
+## Eternal Return Workaround
+
+The diagnostics concluded that the visible issue is more likely an FP compatibility problem at the D3D shader to macOS graphics backend boundary than a generic Wine data transport issue such as pointer truncation, row pitch, stride, or buffer size handling.
+
+The current workaround replaces non-finite pixel shader outputs, such as NaN or Inf, with `0.0`.
+Conceptually, the flow is:
+
+```text
+game DXBC pixel shader
+  -> DXMT LLVM/AIR conversion
+  -> injected non-finite output epilogue
+  -> Metal shader compilation
+  -> GPU execution
+  -> render-target write
+```
+
+The operation is close to a branchless select, so its cost is predictable but not free.
+It is not made global because D3D conformance can require NaN and Inf to remain in float render targets.
+
+## Verification
+
+For an Eternal Return A/B test, disable the shader cache and compare with the sanitizer on and off.
+
+```bash
+DXMT_SHADER_CACHE=0 /path/to/your/steam-launcher.sh
+DXMT_SHADER_CACHE=0 DXMT_DISABLE_OUTPUT_SANITIZE=1 /path/to/your/steam-launcher.sh
+```
+
+The first command checks the sanitized path.
+The second command disables the workaround for comparison.
+
+## Diagnostic Builds
+
+A separate diagnostic build exists for CrossOver 26.1.0.
+It is used to collect shader DXBC dumps, DXMT logs, Xcode `.gputrace` captures, and non-finite output markers.
+
+```bash
+./scripts/build-crossover-26.1.0-diagnostic.sh
+./scripts/test-crossover-26.1.0-diagnostic.sh
+```
+
+The diagnostic marker turns problem pixels white to locate the issue.
+It is not the user-facing fix, and release builds should not include diagnostic markers or tracing code.

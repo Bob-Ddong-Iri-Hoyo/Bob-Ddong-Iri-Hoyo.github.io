@@ -1,40 +1,142 @@
 ---
-title: 开始构建
-description: 说明构建 Wine 与 DXMT 所需的基准信息。
+title: DXMT 构建
+description: 说明 dxmt-er-build 仓库中的 DXMT v0.80 构建和 Eternal Return 补丁。
+sidebar:
+  order: 4
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Aside } from '@astrojs/starlight/components';
 
-## 构建基准
+## 构建目的
 
-<CardGrid>
-  <Card title="CrossOver Wine">
-    <p>Version: <code>26.1.0</code></p>
-  </Card>
+`dxmt-er-build` 仓库会构建带有 Eternal Return 专用 pixel output sanitization 补丁的 DXMT `v0.80` 运行时。
+该补丁用于减少 Eternal Return 中观察到的闪光和图形破损问题。
 
-  <Card title="DXMT">
-    <p>Version: <code>0.80</code></p>
-  </Card>
-</CardGrid>
+补丁会添加 `d3d11.sanitizeOutput` 选项，并且只对 `EternalReturn.exe` 默认启用。
+它不会启用 `dxgi.forceSDR`、`sampleNaNToZero`、`defuseFma` 等其他实验选项。
 
-本文档整理了 Bob-Ddong-Iri-Hoyo 启动器使用的 Wine 与 DXMT 组件的构建基准，适合想要自行构建或理解构建环境的用户参考。
-如果只是使用启动器，不需要按照本文档自行构建这些组件。
+<Aside type="caution">
+这不是 Wine core patch。
+它是 DXMT shader 转换路径中的应用专用修正，并且限制在 Eternal Return 上，以避免改变其他游戏的 D3D 行为。
+</Aside>
 
-## 交叉编译器配置
+## 准备
 
-构建过程中会使用两类用途不同的工具链。
+需要 macOS、Xcode Command Line Tools、`git`、`curl`、`cmake`、`meson` 和 `ninja`。
+为了构建 builtin Wine DLL 和 `.so` 文件，还需要 Wine build tree。
 
-- Wine 构建需要用于生成 Windows 目标二进制文件的 `mingw` 工具链。
-- DXMT 构建需要用于构建 Metal 转换层的 `llvm` 系工具。
+默认 Wine build tree 路径如下。
 
-Wine 使用的 `mingw` 工具链会通过单独准备好的 toolchain 下载后使用。
-DXMT 使用的 `llvm` 则以单独构建的方式为基准，以便与 DXMT 的构建流程保持一致。
-也可以把两者整合到一个公共工具链中，但当前文档会按照 DXMT 教程的流程，将 Wine 与 DXMT 的构建步骤分开说明。
+```text
+./wine-build/build64
+```
 
-## 如何阅读构建文档
+如果使用其他路径，请通过 `WINE_BUILD` 指定。
 
-本页并不会罗列完整的构建命令，而是重点说明每个组件为什么需要。
-实际构建脚本和详细命令，请同时参考相关仓库的 README 与构建文档。
+```bash
+WINE_BUILD=/path/to/wine-build/build64 ./scripts/build-dxmt.sh
+```
 
-构建失败时，建议先确认正在使用的 Wine 版本、DXMT 版本、`mingw` 与 `llvm` 版本是否符合本文档的基准。
-兼容层项目非常依赖依赖项版本，即使是很小的版本差异，也可能导致构建错误或运行时问题。
+## 构建顺序
+
+先准备 DXMT toolchain 并获取 DXMT source。
+
+```bash
+./scripts/fetch-toolchains.sh
+./scripts/fetch-dxmt.sh
+```
+
+然后指定 Wine build tree 构建 DXMT runtime。
+
+```bash
+WINE_BUILD=/path/to/wine-build/build64 ./scripts/build-dxmt.sh
+```
+
+如果 Wine build tree 已连接到默认路径，可以直接执行：
+
+```bash
+./scripts/build-dxmt.sh
+```
+
+## 输出结果
+
+构建完成后会生成 `dxmt-runtime` 和 tarball artifact。
+
+```text
+dxmt-runtime/
+  i386-windows/
+  x86_64-windows/
+  x86_64-unix/
+
+artifacts/
+  dxmt-v0.80-builtin.tar.gz
+  dxmt-v0.80-builtin.tar.gz.sha256
+```
+
+archive 解压后会得到 `dxmt-v0.80-builtin/` 目录。
+runtime 和 archive 会包含相关 DXMT 与 third-party license 文件。
+
+## 安装与 override
+
+需要安装到 Wine Stable 布局时，可以使用安装脚本。
+已有文件会以带 timestamp 的 backup 形式保留。
+
+```bash
+./scripts/install-to-wine-stable.sh
+```
+
+Wine 中需要将 DXMT DLL 设置为优先使用 builtin。
+
+```text
+d3d10core = builtin,native
+d3d11     = builtin,native
+dxgi      = builtin,native
+winemetal = builtin,native
+```
+
+集成到启动器时，应确保 Wine root 和 prefix-local DLL 使用同一 DXMT 版本。
+如果旧的 prefix-local DLL 仍然存在，即使安装了新 runtime，也可能加载旧 DXMT。
+
+## Eternal Return 修正方式
+
+诊断结论认为，该可见问题更像是 D3D shader 转换到 macOS graphics backend 边界上的浮点兼容性问题，而不是 Wine 中常见的 pointer truncation、row pitch、stride、buffer size 等数据传输问题。
+
+当前修正会把 NaN 或 Inf 等 non-finite pixel shader output 替换为 `0.0`。
+概念流程如下。
+
+```text
+game DXBC pixel shader
+  -> DXMT LLVM/AIR conversion
+  -> injected non-finite output epilogue
+  -> Metal shader compilation
+  -> GPU execution
+  -> render-target write
+```
+
+该处理接近 branchless select，成本可预测但不是完全免费。
+另外，从 D3D conformance 的角度看，某些 float render target 可能需要保留 NaN 和 Inf，因此它不会作为全局默认值。
+
+## 验证
+
+对 Eternal Return 进行 A/B 测试时，请关闭 shader cache，并分别比较 sanitizer 开启和关闭的状态。
+
+```bash
+DXMT_SHADER_CACHE=0 /path/to/your/steam-launcher.sh
+DXMT_SHADER_CACHE=0 DXMT_DISABLE_OUTPUT_SANITIZE=1 /path/to/your/steam-launcher.sh
+```
+
+第一条命令用于确认 sanitizer 路径。
+第二条命令用于关闭修正进行对比。
+
+## 诊断构建
+
+CrossOver 26.1.0 另有单独的 diagnostic build。
+它用于收集 shader DXBC dump、DXMT log、Xcode `.gputrace` capture 和 non-finite output marker。
+
+```bash
+./scripts/build-crossover-26.1.0-diagnostic.sh
+./scripts/test-crossover-26.1.0-diagnostic.sh
+```
+
+诊断 marker 会把问题 pixel 标为白色，用于定位问题。
+它不是面向用户的修复方案，release build 中不应包含诊断 marker 或 tracing 代码。

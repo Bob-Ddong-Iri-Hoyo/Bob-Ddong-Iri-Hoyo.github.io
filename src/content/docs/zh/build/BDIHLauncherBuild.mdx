@@ -1,0 +1,403 @@
+---
+title: BDIH Launcher 构建
+description: 说明 BDIH-Launcher 应用的本地构建、打包、更新测试和发布流程。
+sidebar:
+  order: 2
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+## 文档目的
+
+本文档以 `BDIH-Launcher` 仓库为基准，整理启动器应用的构建和打包方式。
+它不只列出 `pnpm build`，也会合并说明仓库 `docs/` 中的发布频道、签名、更新测试、数据保留和 Bottle 执行所有权规则。
+
+<Aside type="caution">
+本页命令默认从 `BDIH-Launcher` 仓库根目录执行。
+这些命令不是在本文档站点仓库中执行的命令。
+</Aside>
+
+## 技术构成
+
+`BDIH-Launcher` 是面向 macOS arm64 的 Electron 应用。
+构建会在 `dist/` 下生成 JavaScript bundle，然后由 `electron-builder` 打包为 `.app`、`.dmg` 和 `.zip`。
+
+<CardGrid>
+  <Card title="Main">
+    Electron main process，负责 Bottle、Wine、DXMT、update、process、log、preference 等核心管理。
+  </Card>
+  <Card title="Preload">
+    Renderer 与 Main 之间的 IPC bridge。
+  </Card>
+  <Card title="Renderer">
+    React UI，显示 Main 持有的状态 snapshot 和 IPC 结果。
+  </Card>
+  <Card title="Guardian">
+    native C helper，用于在启动器异常退出时清理被管理的 Wine process。
+  </Card>
+</CardGrid>
+
+| 项目 | 基准 |
+| --- | --- |
+| 目标 OS | macOS |
+| 目标 CPU | `arm64` |
+| 打包工具 | `electron-builder` |
+| UI | React 19 |
+| 语言 | TypeScript 6 |
+| Bundler | Webpack 5 |
+| 更新 | `electron-updater` |
+
+## 基本准备
+
+依赖应按照 `pnpm-lock.yaml` 安装。
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+仓库没有固定 Node.js engine，因此建议使用与 CI 或当前维护环境一致的 Node.js，并以 lockfile 为准。
+macOS 打包和 native helper 验证需要 macOS 环境。
+
+## 本地构建
+
+基本构建命令如下。
+
+```bash
+pnpm build
+```
+
+它内部按以下顺序执行。
+
+```text
+pnpm build:guardian
+pnpm build:preload
+pnpm build:renderer
+pnpm build:main
+```
+
+| 命令 | 作用 |
+| --- | --- |
+| `pnpm build:guardian` | 构建 `native/BDIHGuardian/guardian.c`，准备放入 app bundle 的 native helper。 |
+| `pnpm build:preload` | 使用 production Webpack 配置构建 Preload script。 |
+| `pnpm build:renderer` | 构建 React Renderer production bundle。 |
+| `pnpm build:main` | 构建 Electron Main process bundle。 |
+| `pnpm start` | 基于已经构建的 `dist/main/main.js` 启动 Electron 应用。 |
+| `pnpm start:all` | 先构建，再启动 Electron 应用。 |
+
+开发中需要更快重建时，可以使用：
+
+```bash
+pnpm build:dev
+pnpm build:dev:renderer
+```
+
+## 打包
+
+只需要 unpacked app 目录时使用 `pack`。
+
+```bash
+pnpm pack
+```
+
+需要生成可分发的 `.dmg` 和 `.zip` 时使用 `dist`。
+
+```bash
+pnpm dist
+```
+
+默认输出路径是 `release/`。
+包中包含 `dist/**/*`、`package.json`、应用图标、`ko.lproj`、locale 文件和 native Guardian helper。
+
+```text
+release/
+  mac-arm64/
+    BDIH Launcher.app
+  BDIH-Launcher-<version>-arm64.dmg
+  BDIH-Launcher-<version>-arm64.zip
+  latest-mac.yml
+  *.blockmap
+```
+
+`electron-builder.config.cjs` 在同一个 production 配置中处理 Stable、Beta 和 Nightly。
+
+| 变量 | 作用 |
+| --- | --- |
+| `UPDATE_CHANNEL` | 选择 `latest`、`beta` 或 `nightly` update feed。 |
+| `RELEASE_TYPE` | 选择 GitHub Release 的 `release` 或 `prerelease` 类型。 |
+| `BDIH_RELEASE_CHANNEL` | 将内部 channel marker 写为 `stable`、`beta` 或 `nightly`。 |
+| `BDIH_REQUIRE_CODE_SIGNING` | 设为 `true` 时要求 electron-builder 必须完成签名。 |
+| `PUBLISH_REPOSITORY` | 指定 electron-builder publish 使用的 GitHub repository。 |
+
+Nightly 使用 `BDIH Launcher Nightly` product name 和 `day.faby.bdih-launcher.nightly` bundle identifier。
+Stable 和 Beta 共享普通的 `BDIH Launcher` product name 和 `day.faby.bdih-launcher` bundle identifier。
+
+## Staging 构建
+
+Staging 不是只改了标题的 production 应用。
+`electron-builder.staging.config.cjs` 使用独立 product name、bundle identifier 和 app data。
+
+| 项目 | 值 |
+| --- | --- |
+| Product name | `BDIH Launcher Staging` |
+| Bundle ID | `day.faby.bdih-launcher.staging` |
+| 默认 release repository | `Bob-Ddong-Iri-Hoyo/BDIH-Launcher-TestProduction` |
+| Stable feed | `latest` |
+| Beta feed | `beta` |
+
+CI workflow 会注入以下值。
+
+```text
+BDIH_STAGING_VERSION
+BDIH_STAGING_CHANNEL
+BDIH_STAGING_SOURCE_COMMIT
+BDIH_STAGING_OUTPUT_DIR
+```
+
+Staging artifact 名称省略 architecture，因为当前 staging 是 arm64-only。
+
+```text
+BDIH-Launcher-Staging-Stable-1.0.0-rc.2.dmg
+BDIH-Launcher-Staging-Stable-1.0.0-rc.2.zip
+BDIH-Launcher-Staging-Beta-1.0.0-beta.1.staging.2.dmg
+BDIH-Launcher-Staging-Beta-1.0.0-beta.1.staging.2.zip
+```
+
+## 更新测试构建
+
+更新 UI 和 Squirrel.Mac 流程应与普通 tag 发布分开测试。
+本地更新测试应用使用隔离的 identity 和 storage。
+
+| 项目 | Stable/Beta 测试值 |
+| --- | --- |
+| Product name | `BDIH Launcher Update Test` |
+| Bundle ID | `day.faby.bdih-launcher.update-test` |
+| App 位置 | `tests/Release/apps/stable-beta/BDIH Launcher Update Test.app` |
+| 状态根目录 | `tests/Release/state/stable-beta` |
+| 本地 feed | `http://127.0.0.1:45678/` |
+
+Nightly 更新测试使用自己的 product name 和 bundle identifier。
+
+```text
+BDIH Launcher Nightly Update Test
+day.faby.bdih-launcher.nightly.update-test
+```
+
+使用以下命令构建测试 artifact。
+
+```bash
+pnpm run build:test -- --version 1.0.0 --channel stable
+pnpm run build:test -- --version 1.1.0-beta.1 --channel beta
+pnpm run build:test:nightly -- --version 1.2.0-nightly.1
+```
+
+也支持 range。
+
+```bash
+pnpm run build:test:stable -- --range 1.0.0~1.0.9
+pnpm run build:test:beta -- --range 1.1.0-beta.1~1.1.0-beta.9
+```
+
+启动本地 feed 后，通过已安装的测试应用检查更新。
+
+```bash
+pnpm update:test:serve
+pnpm install:test
+pnpm reveal:test
+pnpm start:test
+```
+
+Nightly 使用：
+
+```bash
+pnpm install:test:nightly
+pnpm reveal:test:nightly
+pnpm start:test:nightly
+```
+
+更新测试应用会拒绝 production Bottle、Wine 和 DXMT 路径。
+不要把 production settings 复制到测试状态目录。
+
+## 测试
+
+默认测试命令运行 Jest。
+
+```bash
+pnpm test
+```
+
+与构建相关的常用检查如下。
+
+| 命令 | 检查内容 |
+| --- | --- |
+| `pnpm test:guardian` | Guardian 的 clean disarm、EOF、owner exit 和 signal cleanup。 |
+| `pnpm test:guardian:app` | Electron 与 Guardian 的启动恢复和 single-instance 行为。 |
+| `pnpm test:update-build-script` | 更新测试 artifact 的 version/range 解析。 |
+| `pnpm test:staging-promotion-policy` | Staging candidate 和 production promotion 策略。 |
+| `pnpm test:signing-script` | `.p12` 创建、转换和 renewal 流程。 |
+| `pnpm test:hoyo-proxy:build` | 构建 `wine-build` 仓库中的 HoYoPlay proxy helper。 |
+
+Renderer UI 可以通过 Storybook 检查。
+
+```bash
+pnpm storybook
+pnpm build-storybook
+pnpm screenshot
+```
+
+`pnpm screenshot` 会从静态 Storybook 构建中截取 launcher shell story。
+
+```text
+output/screenshot/launcher-view.png
+```
+
+## macOS 签名
+
+发布 workflow 会把 `BDIH Launcher Update Signing` identity 安装到 temporary Keychain，并要求 electron-builder 使用它签名 app bundle。
+secret 缺失或无效时，构建会失败，而不是静默 fallback 到 ad-hoc signing。
+
+| Secret | 作用 |
+| --- | --- |
+| `MACOS_SIGNING_P12_BASE64` | signing `.p12` 的 Base64 值。 |
+| `MACOS_SIGNING_P12_PASSWORD` | `.p12` export password。 |
+| `STAGING_RELEASE_TOKEN` | 向 TestProduction repository 上传 release asset 的 fine-grained token。 |
+
+本地生成 `.p12` 时使用：
+
+```bash
+./scripts/createP12.sh --copy-base64
+```
+
+该 identity 是用于 Squirrel.Mac 更新连续性的 self-signed update identity。
+它不是 Apple Developer ID 签名，也不提供 notarization trust。
+
+## 发布流程
+
+Production Stable 和 Beta 由已验证的 TestProduction candidate 晋升而来。
+它们不是通过手动推送 production tag 创建的。
+
+| Environment | 作用 |
+| --- | --- |
+| `production-candidate-approval` | 在确认 TestProduction candidate 后，允许创建未发布的 Production Draft。 |
+| `production-release` | 重新验证已经创建的 Draft，然后公开给用户。 |
+
+Stable 发布基本流程如下。
+
+```text
+准备 package.json version
+  -> 运行 TestProduction Candidate
+  -> 创建 rc.N candidate
+  -> 测试 candidate
+  -> 批准 production-candidate-approval
+  -> 创建 Production Draft
+  -> 批准 production-release
+  -> 发布 v<version>
+```
+
+Beta 发布保持 `package.json` 中的 release train，并通过 workflow input 注入 Beta number。
+Staging suffix 不会进入 production version。
+
+```text
+package.json:             1.2.3
+TestProduction candidate: 1.2.3-beta.2.staging.3
+Production release:       1.2.3-beta.2
+```
+
+Stable candidate 使用：
+
+```text
+package.json:             1.2.3
+TestProduction candidate: 1.2.3-rc.2
+Production release:       1.2.3
+```
+
+candidate tag 和 release 被视为 immutable。
+如果同一目标需要修改，请创建下一个 attempt，而不是替换旧 tag。
+
+```text
+1.0.0-rc.1 -> 1.0.0-rc.2
+1.0.0-beta.1.staging.1 -> 1.0.0-beta.1.staging.2
+```
+
+## Channel 与数据保留
+
+Stable、Beta、Nightly 不只影响 update feed，也影响 app-data cleanup 策略。
+启动器会在 `app-data-lifecycle.json` 中记录最后成功打开的应用版本和 channel。
+
+retired-file cleanup 只允许在同一 channel 内版本变化时执行。
+
+| Previous build | Current build | retired-file cleanup |
+| --- | --- | --- |
+| Stable | Stable | 允许 |
+| Beta | Beta | 允许 |
+| Nightly | Nightly | 允许 |
+| Stable | Beta | 保留 |
+| Beta | Stable | 保留 |
+| 首次启动 | Any | 保留 |
+| 相同版本 | 相同 channel | 跳过 |
+
+cleanup 基于 allowlist。
+不能仅因为当前构建不再读取某个文件，就删除 Wine registry、prefix、drive 或 unknown file。
+Stable/Beta 切换会创建 channel snapshot，并且只有兼容性检查通过后才继续。
+
+## Bottle 执行结构
+
+启动器构建包含 native Guardian 和 Main-owned execution state。
+这很重要，因为该应用不仅是 UI，还直接管理 Wine process lifecycle。
+
+```text
+Renderer
+  -> IPCManager
+  -> BottleExecutionManager
+  -> BottleExecutionStateRegistry
+  -> Wine/DXMT/Jadeite/process helpers
+  -> Renderer snapshot projection
+```
+
+Main process 是 application launch ownership 的最终权威。
+Renderer 不判断 process lifetime 或重复启动抑制，只显示 Main 提供的 versioned snapshot。
+
+同一 logical target 的并发请求会合并为一个 launch promise。
+已经运行的 target 会返回现有 logical process ID，stopping 状态的 target 会返回可重试失败。
+
+## Wine telemetry 与 Provider 方向
+
+新的 Wine runtime 可以提供 `bdih.wine.process.v1` process telemetry。
+只有当 runtime metadata 声明了精确 capability 时，启动器才会注入 FIFO 环境变量。
+
+```text
+WINE_BDIH_PROCESS_TELEMETRY=1
+WINE_BDIH_PROCESS_PIPE=/absolute/path/to/process-events.fifo
+```
+
+Wine 只报告 process fact。
+判断某个进程是 Steam、HoYoPlay、updater 还是 game，是启动器的职责。
+telemetry 不可用时，现有 wineserver observer 和 process discovery 会作为 fallback。
+
+执行结构正在逐步迁移到 Provider/Strategy model。
+`src/Main/Data` 下的 application profile 和 strategy 声明 requirements，`BottleExecutionManager` 在执行 side effect 前评估这些 requirements。
+
+当前 application-owned Strategy 范围包括：
+
+- Generic Wine application launch 与 installer execution
+- Steam launcher installation、launcher execution、Steam game execution
+- HoYoPlay installation 与 supervised execution
+- ZZZ、Genshin、Star Rail 执行 requirements
+
+## docs/ 文档地图
+
+`BDIH-Launcher` 仓库的 `docs/` 目录具有以下角色。
+
+| 文档 | 角色 |
+| --- | --- |
+| `docs/build.md` | 当前是空 placeholder。实际 build source of truth 是 package scripts 和 packaging config。 |
+| `docs/release.md` | Stable/Beta production promotion、candidate safety rule、version rule。 |
+| `docs/publish.md` | macOS signing、GitHub secret、staging candidate、certificate renewal。 |
+| `docs/update-testing.md` | update checker UI、mock feed、signing-certificate transition test。 |
+| `docs/test.md` | isolated update test app、local feed、Stable/Beta/Nightly update scenario。 |
+| `docs/data-lifecycle.md` | channel-safe cleanup、app data ownership、snapshot rule。 |
+| `docs/bottle-execution.md` | Bottle 执行结构、Guardian、execution state、Provider/Strategy migration。 |
+| `docs/TODO/wine-process-telemetry.md` | Wine process telemetry prototype 和剩余验证项目。 |
+| `docs/TODO/bottle-app-launch-deduplication.md` | 重复启动防护和 logical target ownership rule。 |
+
+修改启动器构建或发布行为时，不应只确认 `pnpm build` 成功。
+还应根据变更范围确认相关 docs policy 和测试路径。

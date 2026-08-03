@@ -1,0 +1,404 @@
+---
+title: BDIH Launcher ビルド
+description: BDIH-Launcher アプリのローカルビルド、パッケージング、更新テスト、配布フローを説明します。
+sidebar:
+  order: 2
+---
+
+import { Aside, Card, CardGrid } from '@astrojs/starlight/components';
+
+## 文書の目的
+
+この文書は、`BDIH-Launcher` リポジトリを基準に、ランチャーアプリをビルドしてパッケージングする方法をまとめます。
+単に `pnpm build` を列挙するだけではなく、リポジトリの `docs/` にある配布チャンネル、署名、更新テスト、データ保全、Bottle 実行所有権のルールも一緒に説明します。
+
+<Aside type="caution">
+このページのコマンドは `BDIH-Launcher` リポジトリのルートで実行する前提です。
+この文書サイトのリポジトリで実行するコマンドではありません。
+</Aside>
+
+## 技術構成
+
+`BDIH-Launcher` は macOS arm64 向けの Electron アプリです。
+ビルドでは `dist/` に JavaScript bundle を生成し、`electron-builder` が `.app`、`.dmg`、`.zip` としてパッケージングします。
+
+<CardGrid>
+  <Card title="Main">
+    Electron main process です。Bottle、Wine、DXMT、update、process、log、preference などの中核管理を担当します。
+  </Card>
+  <Card title="Preload">
+    Renderer と Main の間の IPC bridge です。
+  </Card>
+  <Card title="Renderer">
+    React UI です。Main が所有する状態 snapshot と IPC 結果を画面に表示します。
+  </Card>
+  <Card title="Guardian">
+    ランチャーが異常終了したとき、管理中の Wine process を片付ける native C helper です。
+  </Card>
+</CardGrid>
+
+| 項目 | 基準 |
+| --- | --- |
+| 対象 OS | macOS |
+| 対象 CPU | `arm64` |
+| パッケージャ | `electron-builder` |
+| UI | React 19 |
+| 言語 | TypeScript 6 |
+| Bundler | Webpack 5 |
+| 更新 | `electron-updater` |
+
+## 基本準備
+
+依存関係は `pnpm-lock.yaml` を基準にインストールします。
+
+```bash
+pnpm install --frozen-lockfile
+```
+
+リポジトリでは Node.js engine を固定していないため、CI または現在の保守環境に合わせた Node.js を使い、lockfile を基準にしてください。
+macOS パッケージングと native helper の検証には macOS 環境が必要です。
+
+## ローカルビルド
+
+基本のビルドコマンドは次のとおりです。
+
+```bash
+pnpm build
+```
+
+内部では次の順序で実行されます。
+
+```text
+pnpm build:guardian
+pnpm build:preload
+pnpm build:renderer
+pnpm build:main
+```
+
+| コマンド | 役割 |
+| --- | --- |
+| `pnpm build:guardian` | `native/BDIHGuardian/guardian.c` をビルドし、app bundle に入れる native helper を準備します。 |
+| `pnpm build:preload` | production Webpack 設定で Preload script をビルドします。 |
+| `pnpm build:renderer` | React Renderer の production bundle をビルドします。 |
+| `pnpm build:main` | Electron Main process bundle をビルドします。 |
+| `pnpm start` | 既にビルドされた `dist/main/main.js` から Electron アプリを起動します。 |
+| `pnpm start:all` | ビルドしてから Electron アプリを起動します。 |
+
+開発中に素早く再ビルドする場合は次を使えます。
+
+```bash
+pnpm build:dev
+pnpm build:dev:renderer
+```
+
+## パッケージング
+
+unpacked app ディレクトリだけを確認する場合は `pack` を使います。
+
+```bash
+pnpm pack
+```
+
+配布用の `.dmg` と `.zip` まで作る場合は `dist` を使います。
+
+```bash
+pnpm dist
+```
+
+既定の出力先は `release/` です。
+パッケージには `dist/**/*`、`package.json`、アプリアイコン、`ko.lproj`、locale ファイル、native Guardian helper が含まれます。
+
+```text
+release/
+  mac-arm64/
+    BDIH Launcher.app
+  BDIH-Launcher-<version>-arm64.dmg
+  BDIH-Launcher-<version>-arm64.zip
+  latest-mac.yml
+  *.blockmap
+```
+
+`electron-builder.config.cjs` は Stable、Beta、Nightly を 1 つの production 設定で扱います。
+
+| 変数 | 役割 |
+| --- | --- |
+| `UPDATE_CHANNEL` | `latest`、`beta`、`nightly` update feed を選択します。 |
+| `RELEASE_TYPE` | GitHub Release の `release` または `prerelease` を選択します。 |
+| `BDIH_RELEASE_CHANNEL` | 内部 channel marker を `stable`、`beta`、`nightly` のいずれかで記録します。 |
+| `BDIH_REQUIRE_CODE_SIGNING` | `true` のとき electron-builder の署名を必須にします。 |
+| `PUBLISH_REPOSITORY` | electron-builder publish 先の GitHub repository を指定します。 |
+
+Nightly は `BDIH Launcher Nightly` product name と `day.faby.bdih-launcher.nightly` bundle identifier を使います。
+Stable と Beta は通常の `BDIH Launcher` product name と `day.faby.bdih-launcher` bundle identifier を共有します。
+
+## Staging ビルド
+
+Staging は production アプリのタイトルだけを変えたものではありません。
+`electron-builder.staging.config.cjs` は別の product name、bundle identifier、app data を使用します。
+
+| 項目 | 値 |
+| --- | --- |
+| Product name | `BDIH Launcher Staging` |
+| Bundle ID | `day.faby.bdih-launcher.staging` |
+| 既定 release repository | `Bob-Ddong-Iri-Hoyo/BDIH-Launcher-TestProduction` |
+| Stable feed | `latest` |
+| Beta feed | `beta` |
+
+CI workflow は次の値を注入します。
+
+```text
+BDIH_STAGING_VERSION
+BDIH_STAGING_CHANNEL
+BDIH_STAGING_SOURCE_COMMIT
+BDIH_STAGING_OUTPUT_DIR
+```
+
+Staging artifact 名は architecture を省略します。
+現在の staging が arm64-only であることを明確にするためです。
+
+```text
+BDIH-Launcher-Staging-Stable-1.0.0-rc.2.dmg
+BDIH-Launcher-Staging-Stable-1.0.0-rc.2.zip
+BDIH-Launcher-Staging-Beta-1.0.0-beta.1.staging.2.dmg
+BDIH-Launcher-Staging-Beta-1.0.0-beta.1.staging.2.zip
+```
+
+## 更新テストビルド
+
+更新 UI と Squirrel.Mac の流れは、通常の tag リリースとは分けてテストします。
+ローカル更新テストアプリは、隔離された identity と storage を使います。
+
+| 項目 | Stable/Beta テスト値 |
+| --- | --- |
+| Product name | `BDIH Launcher Update Test` |
+| Bundle ID | `day.faby.bdih-launcher.update-test` |
+| アプリ位置 | `tests/Release/apps/stable-beta/BDIH Launcher Update Test.app` |
+| 状態ルート | `tests/Release/state/stable-beta` |
+| ローカル feed | `http://127.0.0.1:45678/` |
+
+Nightly 更新テストは専用の product name と bundle identifier を使います。
+
+```text
+BDIH Launcher Nightly Update Test
+day.faby.bdih-launcher.nightly.update-test
+```
+
+テスト artifact は次のコマンドで作ります。
+
+```bash
+pnpm run build:test -- --version 1.0.0 --channel stable
+pnpm run build:test -- --version 1.1.0-beta.1 --channel beta
+pnpm run build:test:nightly -- --version 1.2.0-nightly.1
+```
+
+range も使えます。
+
+```bash
+pnpm run build:test:stable -- --range 1.0.0~1.0.9
+pnpm run build:test:beta -- --range 1.1.0-beta.1~1.1.0-beta.9
+```
+
+ローカル feed を起動し、インストール済みのテストアプリで更新を確認します。
+
+```bash
+pnpm update:test:serve
+pnpm install:test
+pnpm reveal:test
+pnpm start:test
+```
+
+Nightly は次を使います。
+
+```bash
+pnpm install:test:nightly
+pnpm reveal:test:nightly
+pnpm start:test:nightly
+```
+
+更新テストアプリは production Bottle、Wine、DXMT パスを拒否するように作られています。
+production settings をテスト状態ディレクトリにコピーしないでください。
+
+## テスト
+
+既定のテストコマンドは Jest を実行します。
+
+```bash
+pnpm test
+```
+
+ビルド関連でよく確認するテストは次のとおりです。
+
+| コマンド | 確認内容 |
+| --- | --- |
+| `pnpm test:guardian` | Guardian の clean disarm、EOF、owner exit、signal cleanup を確認します。 |
+| `pnpm test:guardian:app` | Electron と Guardian を一緒に起動し、startup recovery と single-instance 動作を確認します。 |
+| `pnpm test:update-build-script` | 更新テスト artifact の version/range 解釈を確認します。 |
+| `pnpm test:staging-promotion-policy` | Staging candidate と production promotion ポリシーを確認します。 |
+| `pnpm test:signing-script` | `.p12` 作成、変換、renewal フローを確認します。 |
+| `pnpm test:hoyo-proxy:build` | `wine-build` リポジトリにある HoYoPlay proxy helper をビルドします。 |
+
+Renderer UI は Storybook で確認できます。
+
+```bash
+pnpm storybook
+pnpm build-storybook
+pnpm screenshot
+```
+
+`pnpm screenshot` は static Storybook build から launcher shell story をキャプチャします。
+
+```text
+output/screenshot/launcher-view.png
+```
+
+## macOS 署名
+
+配布 workflow は `BDIH Launcher Update Signing` identity を temporary Keychain に入れ、electron-builder がその identity で app bundle を署名するよう要求します。
+secret がない、または無効な場合は、ad-hoc signing に静かに fallback せずビルドを失敗させます。
+
+| Secret | 役割 |
+| --- | --- |
+| `MACOS_SIGNING_P12_BASE64` | signing `.p12` の Base64 値です。 |
+| `MACOS_SIGNING_P12_PASSWORD` | `.p12` export password です。 |
+| `STAGING_RELEASE_TOKEN` | TestProduction repository に release asset をアップロードする fine-grained token です。 |
+
+ローカルで `.p12` を生成する場合は次を使います。
+
+```bash
+./scripts/createP12.sh --copy-base64
+```
+
+この identity は Squirrel.Mac 更新継続性のための self-signed update identity です。
+Apple Developer ID 署名や notarization trust を提供するものではありません。
+
+## リリースフロー
+
+Production Stable と Beta は、検証済み TestProduction candidate から昇格します。
+production tag を手動で push して作るものではありません。
+
+| Environment | 役割 |
+| --- | --- |
+| `production-candidate-approval` | TestProduction candidate を確認した後、未公開 Production Draft の作成を許可します。 |
+| `production-release` | 作成済み Draft を再検証し、ユーザーへ公開します。 |
+
+Stable リリースの基本フローは次のとおりです。
+
+```text
+package.json version を準備
+  -> TestProduction Candidate を実行
+  -> rc.N candidate を作成
+  -> candidate をテスト
+  -> production-candidate-approval を承認
+  -> Production Draft を作成
+  -> production-release を承認
+  -> v<version> を公開
+```
+
+Beta リリースは `package.json` の release train を維持し、workflow input で Beta number を注入します。
+Staging suffix は production version には入りません。
+
+```text
+package.json:             1.2.3
+TestProduction candidate: 1.2.3-beta.2.staging.3
+Production release:       1.2.3-beta.2
+```
+
+Stable candidate は次の構造です。
+
+```text
+package.json:             1.2.3
+TestProduction candidate: 1.2.3-rc.2
+Production release:       1.2.3
+```
+
+candidate tag と release は immutable として扱います。
+同じ対象に修正が必要な場合は、古い tag を置き換えず次の attempt を作ります。
+
+```text
+1.0.0-rc.1 -> 1.0.0-rc.2
+1.0.0-beta.1.staging.1 -> 1.0.0-beta.1.staging.2
+```
+
+## チャンネルとデータ保全
+
+Stable、Beta、Nightly は update feed だけでなく app-data cleanup ポリシーにも影響します。
+ランチャーは最後に正常起動したアプリ version と channel を `app-data-lifecycle.json` に記録します。
+
+retired-file cleanup は、同じ channel 内で version が変わった場合だけ許可します。
+
+| Previous build | Current build | retired-file cleanup |
+| --- | --- | --- |
+| Stable | Stable | 許可 |
+| Beta | Beta | 許可 |
+| Nightly | Nightly | 許可 |
+| Stable | Beta | 保全 |
+| Beta | Stable | 保全 |
+| 初回起動 | Any | 保全 |
+| 同じ version | 同じ channel | 省略 |
+
+cleanup は allowlist ベースです。
+Wine registry、prefix、drive、unknown file を、現在のビルドが読まないという理由だけで削除してはいけません。
+Stable/Beta の移動では channel transition snapshot を作り、互換性チェックが通った後だけ次へ進みます。
+
+## Bottle 実行構造
+
+ランチャービルドには native Guardian と Main-owned execution state が含まれます。
+これは、このアプリが単なる UI ではなく Wine process lifecycle を直接管理するため重要です。
+
+```text
+Renderer
+  -> IPCManager
+  -> BottleExecutionManager
+  -> BottleExecutionStateRegistry
+  -> Wine/DXMT/Jadeite/process helpers
+  -> Renderer snapshot projection
+```
+
+Main process が application launch ownership の最終権限を持ちます。
+Renderer は process lifetime や重複起動抑制を判断せず、Main が提供する versioned snapshot を表示します。
+
+同じ logical target への同時実行要求は 1 つの launch promise にまとめます。
+すでに実行中の target は既存 logical process ID を返し、stopping 状態の target は retry 可能な失敗として扱います。
+
+## Wine telemetry と Provider 方向
+
+新しい Wine runtime は `bdih.wine.process.v1` process telemetry を提供できます。
+ランチャーは runtime metadata が正確な capability を宣言している場合だけ FIFO 環境変数を注入します。
+
+```text
+WINE_BDIH_PROCESS_TELEMETRY=1
+WINE_BDIH_PROCESS_PIPE=/absolute/path/to/process-events.fifo
+```
+
+Wine は process fact だけを報告します。
+その process が Steam、HoYoPlay、updater、game のどれかを分類する責任はランチャー側にあります。
+telemetry がない runtime では、既存の wineserver observer と process discovery が fallback として動作します。
+
+実行構造は段階的に Provider/Strategy model へ移行しています。
+`src/Main/Data` 配下の application profile と strategy が requirements を宣言し、`BottleExecutionManager` は side effect の前にそれを評価します。
+
+現在の application-owned Strategy 範囲は次のとおりです。
+
+- Generic Wine application launch と installer execution
+- Steam launcher installation、launcher execution、Steam game execution
+- HoYoPlay installation と supervised execution
+- ZZZ、Genshin、Star Rail の execution requirements
+
+## docs/ 文書マップ
+
+`BDIH-Launcher` リポジトリの `docs/` は次の役割を持ちます。
+
+| 文書 | 役割 |
+| --- | --- |
+| `docs/build.md` | 現在は空の placeholder です。実際の build source of truth は package scripts と packaging config です。 |
+| `docs/release.md` | Stable/Beta production promotion、candidate safety rule、version rule を説明します。 |
+| `docs/publish.md` | macOS signing、GitHub secret、staging candidate、certificate renewal を説明します。 |
+| `docs/update-testing.md` | update checker UI、mock feed、signing-certificate transition test を説明します。 |
+| `docs/test.md` | isolated update test app、local feed、Stable/Beta/Nightly update scenario を説明します。 |
+| `docs/data-lifecycle.md` | channel-safe cleanup、app data ownership、snapshot rule を説明します。 |
+| `docs/bottle-execution.md` | Bottle 実行構造、Guardian、execution state、Provider/Strategy migration を説明します。 |
+| `docs/TODO/wine-process-telemetry.md` | Wine process telemetry prototype と残りの検証項目を整理します。 |
+| `docs/TODO/bottle-app-launch-deduplication.md` | 重複起動防止と logical target ownership rule を整理します。 |
+
+ランチャービルドや配布動作を変更するときは、`pnpm build` の成功だけで止めないでください。
+変更範囲に応じて、関連する docs policy とテスト経路も確認します。
