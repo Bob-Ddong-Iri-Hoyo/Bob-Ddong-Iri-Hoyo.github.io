@@ -14,12 +14,16 @@ import { Aside } from "@astrojs/starlight/components";
 
 - ###### Can I play Eternal Return on Mac?
     - The Bob-Ddong-Iri-Hoyo launcher can run the Steam version of Eternal Return on Apple Silicon Mac and macOS. For the setup steps, see the [Steam game installation and settings guide](../steam-guides/).
+- ###### The screen stays black after I launch the game.
+    - On the first launch, the game normally plays a video for the current season. A video playback issue may make the game appear to be stuck on a black screen. Press `Esc` to skip the video and continue.
 - ###### How is Bob-Ddong-Iri-Hoyo different from CrossOver or Whisky?
     - At a high level, it is not very different from CrossOver or Whisky. They are all Wine-based compatibility environments that run Windows programs on macOS.
 
       The difference is that Bob-Ddong-Iri-Hoyo is configured for Eternal Return and HoYoverse games. It includes custom Wine and DXMT changes intended to reduce Eternal Return graphics issues such as green flashes and broken effects.
+- ###### Can I run any Windows game?
+    - The launcher does not explicitly block other Windows games. However, this project is configured for Eternal Return and HoYoverse games, so compatibility and proper operation are neither guaranteed nor supported for other games.
 - ###### Other games install through Steam, but they do not run.
-    - That is how the project is designed.
+    - This is outside the project's supported use cases. The project is not intended to run every Steam game.
 - ###### Can I use DXVK or GPTK instead?
     - No. DXVK is effectively a downgrade for this use case. GPTK is not open source, so the Eternal Return bugs cannot be fixed there.
 - ###### I heard Rosetta is being discontinued. Is that true?

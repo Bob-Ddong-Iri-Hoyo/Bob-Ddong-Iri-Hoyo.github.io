@@ -14,12 +14,16 @@ import { Aside } from "@astrojs/starlight/components";
 
 - ###### 可以在 Mac 上玩 Eternal Return（永恒轮回）吗？
     - 可以。Bob-Ddong-Iri-Hoyo 启动器可以在 Apple Silicon Mac 和 macOS 环境中运行 Steam 版 Eternal Return。安装步骤请参考 [Steam 游戏安装与设置指南](../steam-guides/)。
+- ###### 启动游戏后，画面一直是黑屏。
+    - 首次启动时，游戏通常会播放当前赛季的视频。由于视频播放存在问题，游戏可能看起来像是卡在黑屏。按下 `Esc` 键即可跳过视频并继续。
 - ###### Bob-Ddong-Iri-Hoyo 和 CrossOver、Whisky 有什么不同？
     - 大方向上，它和 CrossOver、Whisky 并没有完全不同。它们都属于基于 Wine 的兼容环境，用来在 macOS 上运行 Windows 程序。
 
       不同之处在于，Bob-Ddong-Iri-Hoyo 会针对 Eternal Return 和 HoYoverse 游戏进行 Wine 与 DXMT 配置调整。它包含自定义 Wine 和 DXMT 修改，用于减少 Eternal Return 中可能出现的绿色闪光、特效破碎等图形问题。
+- ###### 可以运行任意 Windows 游戏吗？
+    - 启动器不会专门阻止其他 Windows 游戏运行。但是，本项目针对 Eternal Return 和 HoYoverse 游戏进行了调整，因此不保证也不支持其他游戏的兼容性和正常运行。
 - ###### Steam 中其他游戏可以安装，但无法运行。
-    - 本来就是这样设计的。
+    - 这种用法不在项目的支持范围内。本项目并不以运行所有 Steam 游戏为目标。
 - ###### 可以使用 DXVK 或 GPTK 吗？
     - 不可以。对这个使用场景来说，DXVK 等于是自我降级。GPTK 不是开源的，所以无法修复 Eternal Return 中发生的 Bug。
 - ###### 听说 Rosetta 要停止服务了？
